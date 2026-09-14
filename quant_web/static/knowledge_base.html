@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>量化知识库 · 去重整合版</title>
+<style>
+:root{
+  --bg:#0d1117; --panel:#161b22; --panel2:#1c2128; --inset:#0b0f14;
+  --line:#30363d; --text:#e6edf3; --muted:#8b949e; --faint:#6e7681;
+  --accent:#58a6ff; --up:#f6465d; --down:#2ebd85; --warn:#d29922; --good:#3fb950;
+  --violet:#8b5cf6; --pink:#f778ba;
+  --font-num:"SF Mono","JetBrains Mono",Consolas,monospace;
+  --radius:10px; --shadow:0 4px 20px rgba(0,0,0,.35); color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:Inter,ui-sans-serif,system-ui,"PingFang SC","Microsoft YaHei",sans-serif;
+  background:radial-gradient(1200px 500px at 70% -10%,rgba(88,166,255,.05),transparent 60%),var(--bg);
+  color:var(--text);font-size:14px;line-height:1.6;display:grid;grid-template-columns:280px 1fr;min-height:100vh}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+::selection{background:rgba(88,166,255,.35)}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#2d333b;border-radius:6px;border:2px solid var(--bg)}
+.mono{font-family:var(--font-num);font-variant-numeric:tabular-nums}
+
+.sidebar{background:linear-gradient(180deg,rgba(22,27,34,.96),rgba(13,17,23,.98));
+  border-right:1px solid var(--line);padding:18px 14px;position:sticky;top:0;height:100vh;
+  overflow-y:auto;display:flex;flex-direction:column;gap:12px;backdrop-filter:blur(6px)}
+.brand{font-size:17px;font-weight:800;padding:6px 10px 14px;border-bottom:1px solid var(--line);
+  background:linear-gradient(90deg,#58a6ff,#8b5cf6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.brand small{display:block;font-size:10px;font-weight:600;letter-spacing:1.8px;-webkit-text-fill-color:var(--faint);margin-top:3px}
+.search-wrap{position:relative}
+#search{width:100%;background:var(--inset);border:1px solid var(--line);border-radius:8px;color:var(--text);
+  font-size:13px;padding:9px 12px;outline:none;transition:border-color .15s,box-shadow .15s}
+#search:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(88,166,255,.18)}
+#search::placeholder{color:var(--faint)}
+.mode-tabs{display:flex;gap:4px;background:var(--inset);border:1px solid var(--line);border-radius:9px;padding:3px}
+.mode-tab{flex:1;border:0;background:transparent;color:var(--muted);border-radius:7px;padding:7px 4px;
+  cursor:pointer;font-size:13px;font-weight:650;transition:background .15s,color .15s}
+.mode-tab.active{background:var(--panel2);color:#fff}
+.mode-tab .n{display:block;font-size:10px;color:var(--faint);font-family:var(--font-num)}
+.nav-btn{display:flex;align-items:center;gap:8px;width:100%;border:0;border-radius:8px;padding:9px 12px;
+  color:#c9d1d9;background:transparent;text-align:left;cursor:pointer;font-size:14px;font-weight:600;transition:background .15s}
+.nav-btn:hover{background:var(--panel2);color:#fff;text-decoration:none}
+.nav-btn.active{background:var(--panel2);color:#fff;box-shadow:inset 2px 0 0 var(--accent)}
+.nav-btn .cnt{margin-left:auto;font-family:var(--font-num);font-size:11.5px;color:var(--muted)}
+.side-sec{font-size:10.5px;color:var(--faint);text-transform:uppercase;letter-spacing:1.5px;padding:4px 12px}
+.cat-item{display:flex;align-items:center;gap:8px;width:100%;border:0;border-radius:7px;padding:6.5px 12px;
+  color:#c9d1d9;background:transparent;text-align:left;cursor:pointer;font-size:12.8px;transition:background .15s}
+.cat-item:hover{background:var(--panel2);text-decoration:none}
+.cat-item.active{background:var(--panel2);color:#fff}
+.cat-dot{width:8px;height:8px;border-radius:50%;flex:none}
+.cat-item .cnt{margin-left:auto;font-family:var(--font-num);font-size:11px;color:var(--muted)}
+.side-foot{margin-top:auto;font-size:11px;color:var(--faint);padding:10px 6px;border-top:1px solid var(--line);line-height:1.8}
+.side-foot b{color:var(--muted);font-weight:600}
+
+.main{padding:26px 30px 60px;max-width:1280px;min-width:0}
+.crumb{font-size:12.5px;color:var(--muted);margin-bottom:10px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+h1.page-t{font-size:25px;font-weight:800;margin-bottom:4px}
+.page-sub{color:var(--muted);font-size:13px;margin-bottom:20px}
+.view-head{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin:18px 0}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;position:relative;overflow:hidden}
+.kpi::after{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);opacity:.75}
+.kpi .v{font-family:var(--font-num);font-size:24px;font-weight:700;line-height:1.2}
+.kpi .l{font-size:11.5px;color:var(--muted);margin-top:2px}
+.kpi.k1::after{background:#58a6ff}.kpi.k2::after{background:#8b5cf6}.kpi.k3::after{background:#3fb950}
+.kpi.k4::after{background:#e3b341}.kpi.k5::after{background:#f778ba}.kpi.k6::after{background:#d2a8ff}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;margin-bottom:18px}
+.panel>h2{font-size:15px;font-weight:700;margin-bottom:3px;display:flex;align-items:center;gap:8px}
+.panel .p-sub{font-size:12px;color:var(--muted);margin-bottom:14px}
+.bar-row{display:grid;grid-template-columns:250px 1fr 130px;gap:10px;align-items:center;padding:5px 0;cursor:pointer;border-radius:6px}
+.bar-row:hover{background:rgba(255,255,255,.03)}
+.bar-row .bl{display:flex;align-items:center;gap:8px;font-size:13px;min-width:0}
+.bar-row .bl span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-track{background:var(--inset);border:1px solid var(--line);border-radius:5px;height:14px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px 0 0 4px;opacity:.85}
+.bar-row .bv{font-family:var(--font-num);font-size:11.5px;color:var(--muted);text-align:right;white-space:nowrap}
+
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+.sort-chip{border:1px solid var(--line);background:var(--panel);color:var(--muted);border-radius:16px;padding:4px 13px;font-size:12px;cursor:pointer;font-weight:600}
+.sort-chip.active{border-color:var(--accent);color:var(--accent);background:rgba(88,166,255,.14)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px}
+
+.tcard{display:flex;flex-direction:column;gap:7px;background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--radius);padding:15px 16px;color:var(--text);position:relative;
+  transition:transform .12s,border-color .15s,box-shadow .15s}
+.tcard:hover{transform:translateY(-2px);border-color:#3d5a80;box-shadow:var(--shadow),0 0 24px rgba(88,166,255,.16);text-decoration:none}
+.tcard.merged{border-left:3px solid var(--violet)}
+.t-top{display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap}
+.t-label{font-size:15px;font-weight:750}
+.t-desc{font-size:12.3px;color:var(--muted);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.t-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:11px;color:var(--faint);margin-top:auto}
+.badge{font-size:10px;font-weight:700;border-radius:4px;padding:1px 6px;letter-spacing:.4px;flex:none}
+.badge.merge{background:rgba(139,92,246,.13);color:#c4a5ff;border:1px solid rgba(139,92,246,.38)}
+.badge.n{background:rgba(88,166,255,.12);color:var(--accent);border:1px solid rgba(88,166,255,.3)}
+
+.card{display:flex;flex-direction:column;gap:7px;background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--radius);padding:15px 16px;color:var(--text);position:relative;
+  transition:transform .12s,border-color .15s,box-shadow .15s}
+.card:hover{transform:translateY(-2px);border-color:#3d5a80;box-shadow:var(--shadow),0 0 24px rgba(88,166,255,.16);text-decoration:none}
+.c-name{font-family:var(--font-num);font-size:12.5px;color:var(--accent);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.c-title{font-size:14.5px;font-weight:700;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.c-desc{font-size:12.3px;color:var(--muted);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.c-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:11px;color:var(--faint);margin-top:auto}
+.cat-tag{display:inline-flex;align-items:center;gap:5px;color:var(--muted)}
+
+.d-head{margin-bottom:16px}
+.d-title{font-size:24px;font-weight:800;line-height:1.35;margin:6px 0 8px}
+.d-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.d-meta .sep{color:var(--faint)}
+.d-path{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-num);font-size:11px;color:var(--faint);
+  background:var(--inset);border:1px solid var(--line);border-radius:6px;padding:3px 8px;max-width:100%;overflow:hidden}
+.d-path code{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.copy-btn{border:0;background:transparent;color:var(--faint);cursor:pointer;font-size:12px;padding:0 2px;flex:none}
+.copy-btn:hover{color:var(--accent)}
+.d-layout{display:grid;grid-template-columns:218px minmax(0,1fr);gap:26px;align-items:start}
+.toc{position:sticky;top:20px;max-height:calc(100vh - 40px);overflow-y:auto;border-left:2px solid var(--line);padding-left:14px;font-size:12.3px}
+.toc .toc-t{font-size:10.5px;color:var(--faint);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px}
+.toc a{display:block;color:var(--muted);padding:3px 0;line-height:1.45;border-radius:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.toc a:hover{color:var(--accent);text-decoration:none}
+.toc a.l2{font-weight:600;color:#c9d1d9}
+.toc a.active{color:var(--accent);font-weight:700}
+.toc a.l3{padding-left:12px;font-size:11.8px}
+
+.mdc{max-width:880px;min-width:0}
+.mdc h1{font-size:22px;font-weight:800;margin:26px 0 14px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.mdc h2{font-size:18px;font-weight:750;margin:28px 0 12px;padding:6px 0 6px 12px;border-bottom:1px solid var(--line);border-left:3px solid var(--accent);border-radius:2px}
+.mdc h3{font-size:15.5px;font-weight:700;color:#f0f6fc;margin:22px 0 10px}
+.mdc h3::before{content:"";display:inline-block;width:6px;height:6px;border-radius:2px;background:var(--warn);margin-right:8px;vertical-align:2px}
+.mdc h4{font-size:14px;font-weight:700;color:#c9d1d9;margin:16px 0 8px}
+.mdc p{margin:10px 0;color:#d5dce4}
+.mdc ul,.mdc ol{margin:10px 0 10px 4px;padding-left:22px}
+.mdc li{margin:5px 0;color:#d5dce4}
+.mdc li::marker{color:var(--accent)}
+.mdc strong{color:#ffd580;font-weight:700}
+.mdc em{color:#c4a5ff}
+.mdc a{color:var(--accent);text-decoration-color:rgba(88,166,255,.4)}
+.mdc blockquote{margin:14px 0;padding:10px 16px;border-left:3px solid var(--accent);background:rgba(88,166,255,.06);border-radius:0 8px 8px 0;color:#c9d1d9}
+.mdc blockquote p{margin:4px 0}
+.mdc hr{border:0;border-top:1px solid var(--line);margin:22px 0}
+.mdc code:not(pre code){font-family:var(--font-num);font-size:.86em;background:rgba(110,118,129,.22);border:1px solid rgba(110,118,129,.28);border-radius:5px;padding:1.5px 6px;color:#79c0ff}
+.mdc pre{background:var(--inset);border:1px solid var(--line);border-radius:9px;padding:14px 16px;overflow-x:auto;margin:14px 0}
+.mdc pre code{font-family:var(--font-num);font-size:12.3px;line-height:1.65;color:#c9d1d9;white-space:pre}
+.mdc table{border-collapse:collapse;width:100%;margin:14px 0;font-size:12.8px;display:block;overflow-x:auto}
+.mdc th{background:var(--panel2);color:#f0f6fc;font-weight:700;text-align:left;padding:8px 11px;border:1px solid var(--line);white-space:nowrap}
+.mdc td{padding:7px 11px;border:1px solid var(--line);color:#d5dce4;vertical-align:top}
+.mdc tr:nth-child(even) td{background:rgba(255,255,255,.015)}
+mark{background:rgba(88,166,255,.32);color:#fff;border-radius:3px;padding:0 2px}
+
+.mem-list{display:flex;flex-direction:column;gap:8px}
+.mem-item{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:10px 14px;color:var(--text);transition:border-color .15s}
+.mem-item:hover{border-color:#3d5a80;text-decoration:none}
+.mem-item .rep{font-size:10px;font-weight:700;background:rgba(210,153,34,.14);color:var(--warn);border:1px solid rgba(210,153,34,.4);border-radius:4px;padding:1px 6px;flex:none}
+.mem-item .nm{font-family:var(--font-num);font-size:12px;color:var(--accent);flex:none}
+.mem-item .tt{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.mem-item .sz{font-family:var(--font-num);font-size:11px;color:var(--faint);flex:none}
+
+.pn-row{display:flex;justify-content:space-between;gap:12px;margin-top:26px}
+.pn-btn{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:12px 16px;color:var(--text);min-width:0}
+.pn-btn:hover{border-color:#3d5a80;text-decoration:none}
+.pn-btn .d{font-size:10.5px;color:var(--faint);margin-bottom:3px}
+.pn-btn .t{font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pn-btn.next{text-align:right}
+
+.res-list{display:flex;flex-direction:column;gap:10px}
+.res-item{display:block;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:13px 16px;color:var(--text)}
+.res-item:hover{border-color:#3d5a80;text-decoration:none}
+.res-item .r1{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.res-item .r2{font-size:12px;color:var(--muted);margin-top:5px;line-height:1.6}
+.noresult{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;margin-bottom:16px}
+.noresult h3{font-size:15px;color:var(--warn);margin-bottom:6px}
+.noresult p{font-size:12.5px;color:var(--muted)}
+.top-btn{position:fixed;right:26px;bottom:26px;width:40px;height:40px;border-radius:50%;background:var(--panel2);
+  border:1px solid var(--line);color:var(--muted);cursor:pointer;display:none;align-items:center;justify-content:center;font-size:16px;z-index:50}
+.top-btn:hover{color:#fff;border-color:var(--accent)}
+.rand-btn{border:1px solid var(--line);background:var(--panel);color:#c9d1d9;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:650;cursor:pointer}
+.rand-btn:hover{border-color:var(--accent);color:#fff}
+.rand-btn b{color:var(--warn)}
+.pill-cloud{display:flex;flex-wrap:wrap;gap:8px}
+.pill{display:inline-flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--line);border-radius:16px;padding:4px 12px;font-size:12.5px;color:#c9d1d9;cursor:pointer;transition:border-color .15s,color .15s}
+.pill:hover{border-color:var(--accent);color:#fff;text-decoration:none}
+.pill .n{font-family:var(--font-num);font-size:10.5px;color:var(--violet);background:rgba(139,92,246,.12);border-radius:9px;padding:0 6px}
+
+@media (max-width:960px){
+  body{grid-template-columns:1fr}
+  .sidebar{position:fixed;left:0;top:0;bottom:0;width:280px;z-index:100;transform:translateX(-100%);transition:transform .2s}
+  .sidebar.open{transform:translateX(0);box-shadow:var(--shadow)}
+  .menu-btn{display:flex;position:fixed;left:14px;top:12px;z-index:101;width:38px;height:38px;align-items:center;justify-content:center;background:var(--panel);border:1px solid var(--line);border-radius:8px;color:var(--text);cursor:pointer}
+  .main{padding:64px 16px 50px}
+  .d-layout{grid-template-columns:1fr}
+  .toc{display:none}
+  .bar-row{grid-template-columns:1fr;gap:4px}
+  .bar-row .bv{text-align:left}
+}
+.menu-btn{display:none}
+</style>
+</head>
+<body>
+<button class="menu-btn" id="menuBtn">☰</button>
+<aside class="sidebar" id="sidebar">
+  <div class="brand">量化知识库<small>DEDUP · CONSOLIDATED EDITION</small></div>
+  <div class="search-wrap"><input id="search" type="text" placeholder="搜索主题 / 技能 / 关键词…" autocomplete="off"></div>
+  <div class="mode-tabs">
+    <button class="mode-tab active" data-mode="topic" id="tabTopic">主题<div class="n" id="tabTopicN"></div></button>
+    <button class="mode-tab" data-mode="skill" id="tabSkill">技能<div class="n" id="tabSkillN"></div></button>
+  </div>
+  <nav>
+    <button class="nav-btn" data-nav="/"><span>📊</span> 去重总览</button>
+    <button class="nav-btn" data-nav="/topics"><span>🗂️</span> 全部主题 <span class="cnt" id="navTopics"></span></button>
+    <button class="nav-btn" data-nav="/skills"><span>🗃️</span> 全部技能 <span class="cnt" id="navSkills"></span></button>
+  </nav>
+  <div class="side-sec">知识分类</div>
+  <nav id="catNav" style="display:flex;flex-direction:column;gap:1px"></nav>
+  <div class="side-foot" id="sideFoot"></div>
+</aside>
+<main class="main" id="main"></main>
+<button class="top-btn" id="topBtn">↑</button>
+
+<script>
+"use strict";
+const KB = {skills:[],topics:{},meta:{built:"public",total:0,totalBytes:0,totalZh:0,totalHeads:0,totalCode:0,totalTables:0,totalChains:0,roots:{},books:[],cats:{},topicMeta:{}}};
+const S = KB.skills, META = KB.meta, CATS = META.cats, TOPICS = KB.topics, TM = META.topicMeta;
+const byId = new Map(S.map(s => [s.id, s]));
+const T = [...Object.entries(TOPICS)].map(([k,v]) => ({key:k, ...v}));
+
+const $ = sel => document.querySelector(sel);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmtBytes = n => n >= 1048576 ? (n/1048576).toFixed(1)+"MB" : (n/1024).toFixed(0)+"KB";
+const fmtWan = n => n >= 10000 ? (n/10000).toFixed(1)+"万" : String(n);
+const fmtDate = ts => { const d = new Date(ts*1000); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
+const readMin = s => Math.max(1, Math.round(s.zh/400));
+const trunc = (s,n) => s.length > n ? s.slice(0,n)+"…" : s;
+const stripHtml = h => { const d = document.createElement("div"); d.innerHTML = h; return d.textContent || ""; };
+const _tc = new Map();
+function bodyText(s){ let t = _tc.get(s.id); if (t === undefined){ t = stripHtml(s.html).replace(/\s+/g," ").toLowerCase(); _tc.set(s.id,t);} return t; }
+function hl(text,q){ const t = esc(text); if(!q) return t; const lt=t.toLowerCase(), lq=q.toLowerCase();
+  let out="",i=0,j; while((j=lt.indexOf(lq,i))>=0){ out+=t.slice(i,j)+"<mark>"+t.slice(j,j+lq.length)+"</mark>"; i=j+lq.length; } return out+t.slice(i); }
+
+function scoreOf(s,q){ const nm=s.name.toLowerCase(), ti=(s.title||"").toLowerCase(), de=s.desc.toLowerCase();
+  let sc=0; if(nm===q)sc+=200; else if(nm.startsWith(q))sc+=120; else if(nm.includes(q))sc+=60;
+  if(ti.includes(q))sc+=40; if(de.includes(q))sc+=25; return sc + Math.min(bodyText(s).split(q).length-1,12)*3; }
+function doSearch(qstr){ const q=qstr.trim().toLowerCase(); if(!q) return [];
+  const terms=q.split(/\s+/); const res=[];
+  for(const s of S){ let total=0,all=true; for(const t of terms){ const sc=scoreOf(s,t); if(sc<=0){all=false;break;} total+=sc; } if(all) res.push([total,s]); }
+  res.sort((a,b)=>b[0]-a[0]||b[1].bytes-a[1].bytes); return res.map(r=>r[1]); }
+function fuzzySuggest(q){ const chars=[...new Set(q.toLowerCase())].filter(c=>c.trim()); if(!chars.length) return [];
+  return S.map(s=>{ const hay=(s.name+(s.title||"")).toLowerCase(); let hit=0; for(const c of chars) if(hay.includes(c)) hit++; return [hit/chars.length,s]; })
+    .filter(x=>x[0]>0.35).sort((a,b)=>b[0]-a[0]).slice(0,8).map(x=>x[1]); }
+function snippet(s,q){ const terms=q.toLowerCase().split(/\s+/).filter(Boolean); const bt=bodyText(s);
+  for(const t of terms){ const i=bt.indexOf(t); if(i>=0){ const a=Math.max(0,i-42), b=Math.min(bt.length,i+t.length+78);
+    return (a>0?"…":"")+bt.slice(a,b)+(b<bt.length?"…":""); } } return trunc(s.desc,130); }
+
+function catBadge(cid){ const c=CATS[cid]; if(!c) return "";
+  return `<span class="cat-tag"><span class="cat-dot" style="background:${c.color}"></span>${esc(c.label)}</span>`; }
+
+function tcard(t,q){
+  const merged = t.n >= 2;
+  return `<a class="tcard${merged?" merged":""}" href="#/topic/${encodeURIComponent(t.key)}">
+    <div class="t-top"><span style="font-size:18px">${t.icon}</span>
+      <span class="t-label">${hl(t.label,q)}</span>
+      ${merged?`<span class="badge merge">合并 ${t.n} 技能</span>`:`<span class="badge n">独立</span>`}
+    </div>
+    <div class="t-desc">${hl(trunc(t.desc,110),q)}</div>
+    <div class="t-meta">${catBadge(t.cat)}
+      <span class="sep">·</span><span class="mono">${fmtWan(t.zh)}字</span>
+      <span class="sep">·</span><span>${esc(t.reason)}</span>
+      ${t.book?`<span class="sep">·</span><span>📖 ${esc(trunc(t.book,20))}</span>`:""}
+    </div>
+  </a>`;
+}
+function card(s,q){
+  const t = topicOfSkill[s.id];
+  return `<a class="card" href="#/skill/${encodeURIComponent(s.id)}">
+    <div class="t-top"><span class="c-name">${hl(s.name,q)}</span>
+      ${s.chain?'<span class="badge merge" style="background:rgba(210,153,34,.14);color:var(--warn);border-color:rgba(210,153,34,.4)">思维链</span>':""}
+      ${s.src?`<span class="badge n" title="${esc(s.src)}">${esc(trunc(s.src,22))}</span>`:""}
+    </div>
+    <div class="c-title">${hl(s.title||s.name,q)}</div>
+    <div class="c-desc">${hl(trunc(s.desc,110),q)}</div>
+    <div class="c-meta">${catBadge(s.cat)}
+      <span class="sep">·</span><span class="mono">${fmtWan(s.zh)}字</span>
+      <span class="sep">·</span><span class="mono">${fmtBytes(s.bytes)}</span>
+      ${t&&t.n>=2?`<span class="sep">·</span><span style="color:#c4a5ff">属 ${esc(t.label)}(${t.n})</span>`:""}
+    </div>
+  </a>`;
+}
+function resItem(s,q){
+  return `<a class="res-item" href="#/skill/${encodeURIComponent(s.id)}">
+    <div class="r1"><span class="c-name">${hl(s.name,q)}</span>
+      <span style="font-size:12.5px;font-weight:700">${hl(s.title||s.name,q)}</span>${catBadge(s.cat)}</div>
+    <div class="r2">${hl(snippet(s,q),q)}</div>
+  </a>`;
+}
+
+const topicOfSkill = {};
+for (const t of T) for (const id of t.members) topicOfSkill[id] = t;
+
+function renderOverview(){
+  const merged = T.filter(t=>t.n>=2).sort((a,b)=>b.n-a.n);
+  const maxN = merged[0].n;
+  const bars = merged.slice(0,22).map(t=>`
+    <div class="bar-row" onclick="location.hash='#/topic/${encodeURIComponent(t.key)}'">
+      <div class="bl"><span>${t.icon}</span><span>${esc(t.label)}</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(t.n/maxN*100).toFixed(1)}%;background:linear-gradient(90deg,#8b5cf6,#58a6ff)"></div></div>
+      <div class="bv mono">${t.n} 技能 · ${fmtWan(t.zh)}字</div>
+    </div>`).join("");
+  const latest = [...S].sort((a,b)=>b.mtime-a.mtime).slice(0,6);
+  const latestHtml = latest.map(s=>`
+    <a class="mem-item" href="#/skill/${encodeURIComponent(s.id)}">
+      <span class="nm">${esc(s.name)}</span>
+      <span class="tt">${esc(trunc(s.title||"",42))}</span>
+      <span class="sz">${fmtDate(s.mtime)}</span></a>`).join("");
+  $("#main").innerHTML = `
+  <div class="view-head">
+    <div><h1 class="page-t">📊 量化知识库 · 去重整合版</h1>
+    <div class="page-sub">同族技能与同源著作聚类合并 · 合并过程全透明可查 · 构建 ${META.built}</div></div>
+    <button class="rand-btn" onclick="randomSkill()">🎲 随机修炼 <b>1</b> 技能</button>
+  </div>
+  <div class="kpi-grid">
+    <div class="kpi k1"><div class="v mono">${TM.skills}</div><div class="l">原始技能</div></div>
+    <div class="kpi k2"><div class="v mono">${TM.topics}</div><div class="l">去重后知识主题</div></div>
+    <div class="kpi k3"><div class="v mono">-${TM.reduction}%</div><div class="l">导航条目压缩</div></div>
+    <div class="kpi k4"><div class="v mono">${TM.merged}</div><div class="l">合并族（≥2技能）</div></div>
+    <div class="kpi k5"><div class="v mono">${fmtWan(META.totalZh)}<small style="font-size:12px">字</small></div><div class="l">知识总量零删减</div></div>
+    <div class="kpi k6"><div class="v mono">${META.books.length}</div><div class="l">来源著作</div></div>
+  </div>
+  <div class="panel">
+    <h2>🔀 去重合并地图 <span style="font-weight:400;font-size:12px;color:var(--muted)">前 22 大合并族 · 点击进入主题</span></h2>
+    <div class="p-sub">合并只影响导航层级，技能原文一字不动——每个主题内可展开全部成员</div>
+    ${bars}
+  </div>
+  <div class="panel"><h2>🕐 最近收录</h2><div class="p-sub">按文件更新时间排序</div><div class="mem-list">${latestHtml}</div></div>`;
+  setActiveNav("/");
+}
+
+let topicSort = "n";
+function renderTopics(sort){
+  topicSort = sort || topicSort;
+  const sorters = { n:(a,b)=>b.n-a.n, zh:(a,b)=>b.zh-a.zh, label:(a,b)=>a.label.localeCompare(b.label,"zh") };
+  const arr = [...T].sort(sorters[topicSort]||sorters.n);
+  const chips = [["n","合并数"],["zh","字数"],["label","名称"]].map(([k,l])=>
+    `<button class="sort-chip${topicSort===k?" active":""}" onclick="renderTopics('${k}')">${l}</button>`).join("");
+  $("#main").innerHTML = `
+  <div class="crumb"><a href="#/">总览</a> <span>›</span> <span>知识主题</span></div>
+  <div class="view-head"><div><h1 class="page-t">🗂️ 知识主题（去重后）</h1>
+  <div class="page-sub">${TM.topics} 个主题 = ${TM.merged} 个合并族 + ${TM.solo} 个独立技能 · 原始 ${TM.skills} 技能全部保留</div></div>
+  <div class="toolbar">${chips}</div></div>
+  <div class="grid">${arr.map(t=>tcard(t,"")).join("")}</div>`;
+  setActiveNav("/topics"); window.scrollTo(0,0);
+}
+
+let skillSort = "bytes";
+function renderSkills(sort){
+  skillSort = sort || skillSort;
+  const sorters = { bytes:(a,b)=>b.bytes-a.bytes, name:(a,b)=>a.name.localeCompare(b.name), zh:(a,b)=>b.zh-a.zh, mtime:(a,b)=>b.mtime-a.mtime };
+  const arr = [...S].sort(sorters[skillSort]||sorters.bytes);
+  const chips = [["bytes","篇幅"],["name","名称"],["zh","字数"],["mtime","更新"]].map(([k,l])=>
+    `<button class="sort-chip${skillSort===k?" active":""}" onclick="renderSkills('${k}')">${l}</button>`).join("");
+  $("#main").innerHTML = `
+  <div class="crumb"><a href="#/">总览</a> <span>›</span> <span>全部技能</span></div>
+  <div class="view-head"><div><h1 class="page-t">🗃️ 全部原始技能</h1>
+  <div class="page-sub">${S.length} 个技能 · 去重不删内容，仅重组导航</div></div>
+  <div class="toolbar">${chips}</div></div>
+  <div class="grid">${arr.map(s=>card(s,"")).join("")}</div>`;
+  setActiveNav("/skills"); window.scrollTo(0,0);
+}
+
+let spy = null;
+function renderTopic(key){
+  const t = TOPICS[key];
+  if (!t){ location.hash = "#/topics"; return; }
+  const members = t.members.map(id=>byId.get(id)).filter(Boolean);
+  const rep = members[0];
+  const rels = [...T].filter(x=>x!==t && x.cat===t.cat && x.n>=1)
+    .sort((a,b)=>b.n-a.n).slice(0,4);
+  $("#main").innerHTML = `
+  <div class="crumb"><a href="#/">总览</a> <span>›</span> <a href="#/topics">知识主题</a> <span>›</span> <span>${esc(t.label)}</span></div>
+  <div class="d-head">
+    <h1 class="d-title">${t.icon} ${esc(t.label)}</h1>
+    <div class="d-meta">
+      ${catBadge(t.cat)}<span class="sep">|</span>
+      <span class="mono">${t.n} 个技能 · ${fmtWan(t.zh)} 字</span>
+      <span class="sep">|</span><span>合并原因：${esc(t.reason)}</span>
+      ${t.book?`<span class="sep">|</span><span>📖 同源《${esc(t.book)}》</span>`:""}
+      <span class="sep">|</span><span>代表来源：${esc(t.src||"-")}</span>
+    </div>
+    <div class="d-meta" style="margin-top:8px;color:var(--muted);font-size:12.5px">${esc(t.desc)}</div>
+  </div>
+  <div class="panel">
+    <h2>📦 成员技能（${members.length}） <span style="font-weight:400;font-size:12px;color:var(--muted)">按篇幅排序 · ⭐ 为代表作</span></h2>
+    <div class="mem-list" style="margin-top:10px">
+      ${members.map((m,i)=>`<a class="mem-item" href="#/skill/${encodeURIComponent(m.id)}">
+        ${i===0?'<span class="rep">⭐ 代表作</span>':""}
+        <span class="nm">${esc(m.name)}</span>
+        <span class="tt">${esc(m.title||m.name)}</span>
+        <span class="sz">${fmtWan(m.zh)}字 · ${fmtBytes(m.bytes)}${m.chain?" · 思维链":""}</span>
+      </a>`).join("")}
+    </div>
+  </div>
+  <div class="panel"><h2>⭐ 代表作正文：${esc(rep.name)}</h2>
+  <div class="p-sub">主题内篇幅最大、内容最完整的成员；其余成员点上方列表查看全文</div>
+  <div class="d-layout">
+    <nav class="toc" id="toc"><div class="toc-t">本页目录</div><div id="tocLinks"></div></nav>
+    <article class="mdc" id="mdc">${rep.html}</article>
+  </div></div>
+  ${rels.length?`<div class="panel"><h2>🔗 相关主题</h2><div class="grid" style="margin-top:10px">${rels.map(x=>tcard(x,"")).join("")}</div></div>`:""}`;
+  const heads = [...document.querySelectorAll(".mdc h2, .mdc h3")];
+  if (heads.length >= 2){
+    $("#tocLinks").innerHTML = heads.map(h=>`<a class="${h.tagName==="H2"?"l2":"l3"}" href="#${h.id}" data-tgt="${h.id}">${esc(h.textContent)}</a>`).join("");
+    initSpy(heads);
+  } else document.getElementById("toc").style.display = "none";
+  setActiveNav(null); window.scrollTo(0,0);
+}
+function renderSkill(id){
+  const s = byId.get(id);
+  if (!s){ location.hash = "#/skills"; return; }
+  const t = topicOfSkill[id];
+  const sameTopic = t && t.n>=2 ? t.members.map(i=>byId.get(i)).filter(Boolean) : S.filter(x=>x.cat===s.cat);
+  const idx = sameTopic.indexOf(s);
+  const prev = idx>0?sameTopic[idx-1]:null, next = idx<sameTopic.length-1?sameTopic[idx+1]:null;
+  const rels = (s.rel||[]).map(r=>byId.get(r)).filter(Boolean);
+  $("#main").innerHTML = `
+  <div class="crumb"><a href="#/">总览</a> <span>›</span>
+    ${t&&t.n>=2?`<a href="#/topic/${encodeURIComponent(t.key)}">${t.icon} ${esc(t.label)}</a>`:`<a href="#/skills">技能</a>`}
+    <span>›</span> <span class="mono">${esc(s.name)}</span></div>
+  <div class="d-head">
+    <h1 class="d-title">${esc(s.title||s.name)}</h1>
+    <div class="d-meta">${catBadge(s.cat)}<span class="sep">|</span><span class="mono">${esc(s.name)}</span>
+      ${s.chain?'<span class="badge merge" style="background:rgba(210,153,34,.14);color:var(--warn);border-color:rgba(210,153,34,.4)">思维链</span>':""}
+      ${t&&t.n>=2?`<span class="sep">|</span><a href="#/topic/${encodeURIComponent(t.key)}" style="color:#c4a5ff">属主题：${t.icon}${esc(t.label)}（${t.n}技能）</a>`:""}
+      <span class="sep">|</span><span class="mono">${fmtWan(s.zh)}字 · ${fmtBytes(s.bytes)} · 约${readMin(s)}分钟</span>
+      <span class="sep">|</span><span>更新 ${fmtDate(s.mtime)}</span></div>
+    <div class="d-meta" style="margin-top:8px"><span class="d-path"><code title="${esc(s.path)}">${esc(s.path)}</code>
+      <button class="copy-btn" onclick="copyPath('${esc(s.path)}')">⧉ 复制</button></span></div>
+  </div>
+  <div class="d-layout">
+    <nav class="toc" id="toc"><div class="toc-t">本页目录</div><div id="tocLinks"></div></nav>
+    <article class="mdc" id="mdc">${s.html}</article>
+  </div>
+  ${rels.length?`<div class="panel" style="margin-top:26px"><h2>🔗 相关技能</h2><div class="grid" style="margin-top:10px">${rels.map(r=>card(r,"")).join("")}</div></div>`:""}
+  <div class="pn-row">
+    ${prev?`<a class="pn-btn" href="#/skill/${encodeURIComponent(prev.id)}"><div class="d">← 上一篇${t&&t.n>=2?"（同主题）":""}</div><div class="t">${esc(prev.title||prev.name)}</div></a>`:"<div></div>"}
+    ${next?`<a class="pn-btn next" href="#/skill/${encodeURIComponent(next.id)}"><div class="d">下一篇${t&&t.n>=2?"（同主题）":""} →</div><div class="t">${esc(next.title||next.name)}</div></a>`:"<div></div>"}
+  </div>`;
+  const heads = [...document.querySelectorAll(".mdc h2, .mdc h3")];
+  if (heads.length >= 2){
+    $("#tocLinks").innerHTML = heads.map(h=>`<a class="${h.tagName==="H2"?"l2":"l3"}" href="#${h.id}" data-tgt="${h.id}">${esc(h.textContent)}</a>`).join("");
+    initSpy(heads);
+  } else document.getElementById("toc").style.display = "none";
+  setActiveNav(null); window.scrollTo(0,0);
+}
+function initSpy(heads){
+  if (spy) spy.disconnect();
+  const links = new Map([...document.querySelectorAll("#tocLinks a")].map(a=>[a.dataset.tgt,a]));
+  spy = new IntersectionObserver(entries=>{ for(const e of entries){ if(e.isIntersecting){
+    links.forEach(a=>a.classList.remove("active")); const a=links.get(e.target.id); if(a) a.classList.add("active"); } } },
+    { rootMargin:"-10% 0px -80% 0px" });
+  heads.forEach(h=>spy.observe(h));
+}
+
+let searchPage = 0;
+function renderSearch(q, page=0){
+  const res = doSearch(q), pageSize = 40, pages = Math.max(1, Math.ceil(res.length / pageSize));
+  searchPage = Math.max(0, Math.min(page, pages - 1));
+  if (res.length){
+    const slice = res.slice(searchPage * pageSize, (searchPage + 1) * pageSize);
+    $("#main").innerHTML = `
+    <div class="crumb"><a href="#/">总览</a> <span>›</span> <span>搜索</span></div>
+    <h1 class="page-t">🔎 搜索「${esc(q)}」</h1>
+    <div class="page-sub">命中 ${res.length} 个技能 · 第 ${searchPage + 1}/${pages} 页</div>
+    <div class="res-list">${slice.map(s=>resItem(s,q)).join("")}</div>
+    ${pages > 1 ? `<div class="pn-row"><button class="rand-btn" ${searchPage===0?'disabled':''} onclick="renderSearch(${JSON.stringify(q)},${searchPage-1})">← 上一页</button><button class="rand-btn" ${searchPage>=pages-1?'disabled':''} onclick="renderSearch(${JSON.stringify(q)},${searchPage+1})">下一页 →</button></div>` : ""}`;
+  } else {
+    const near = fuzzySuggest(q);
+    $("#main").innerHTML = `
+    <div class="crumb"><a href="#/">总览</a> <span>›</span> <span>搜索</span></div>
+    <h1 class="page-t">🔎 搜索「${esc(q)}」</h1>
+    <div class="noresult"><h3>没有精确命中</h3><p>试试更短的关键词，或从最接近的技能与主题继续。</p></div>
+    ${near.length?`<div class="panel"><h2>🎯 最接近</h2><div class="grid">${near.map(s=>card(s,"")).join("")}</div></div>`:""}`;
+  }
+  setActiveNav(null);
+}
+
+function setActiveNav(key){
+  document.querySelectorAll(".nav-btn,.cat-item").forEach(el=>el.classList.remove("active"));
+  if(!key) return;
+  const el = document.querySelector(`.nav-btn[data-nav="${key}"]`) || document.querySelector(`.cat-item[data-cat="${key}"]`);
+  if (el) el.classList.add("active");
+}
+function route(){
+  const h = decodeURIComponent(location.hash.slice(1)||"/");
+  if (h.startsWith("/topic/")) renderTopic(decodeURIComponent(h.slice(7)));
+  else if (h.startsWith("/skill/")) renderSkill(decodeURIComponent(h.slice(7)));
+  else if (h.startsWith("/topics")) renderTopics();
+  else if (h.startsWith("/skills")) renderSkills();
+  else renderOverview();
+  if (window.innerWidth<=960) $("#sidebar").classList.remove("open");
+}
+
+window.copyPath = function(p){ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(p).catch(()=>{}); }
+  else { const ta=document.createElement("textarea"); ta.value=p; document.body.appendChild(ta); ta.select();
+    try{document.execCommand("copy");}catch(e){} document.body.removeChild(ta); } };
+window.randomSkill = function(){ const s=S[Math.floor(Math.random()*S.length)]; location.hash="#/skill/"+encodeURIComponent(s.id); };
+window.renderTopics = renderTopics; window.renderSkills = renderSkills;
+
+(function buildSidebar(){
+  $("#navTopics").textContent = TM.topics; $("#navSkills").textContent = S.length;
+  $("#tabTopicN").textContent = TM.topics+" 主题"; $("#tabSkillN").textContent = S.length+" 技能";
+  const cats = Object.entries(CATS).sort((a,b)=>b[1].n-a[1].n);
+  $("#catNav").innerHTML = cats.map(([cid,c])=>
+    `<button class="cat-item" data-cat="${cid}" onclick="location.hash='#/topics'">
+      <span class="cat-dot" style="background:${c.color}"></span><span>${c.label}</span><span class="cnt">${c.n}</span></button>`).join("");
+  $("#sideFoot").innerHTML = `<b>${TM.skills}</b> 技能 → <b>${TM.topics}</b> 主题（-${TM.reduction}%）<br>` +
+    `知识量 <b>${fmtWan(META.totalZh)}</b> 字 · <b>${META.books.length}</b> 部著作<br>构建 ${META.built} · 全量内嵌离线可用`;
+  document.querySelectorAll(".mode-tab").forEach(b=>b.addEventListener("click",()=>{
+    document.querySelectorAll(".mode-tab").forEach(x=>x.classList.remove("active")); b.classList.add("active");
+    location.hash = b.dataset.mode==="topic" ? "#/topics" : "#/skills";
+  }));
+})();
+
+(function bindSearch(){
+  const inp = $("#search"); let timer=null;
+  inp.addEventListener("input",()=>{ clearTimeout(timer); timer=setTimeout(()=>{
+    const v=inp.value.trim(); if(v) renderSearch(v); else route(); },160); });
+  inp.addEventListener("keydown",e=>{
+    if(e.key==="Escape"){ inp.value=""; inp.blur(); route(); }
+    if(e.key==="Enter"){ const res=doSearch(inp.value); if(res.length){ location.hash="#/skill/"+encodeURIComponent(res[0].id); inp.value=""; inp.blur(); } } });
+})();
+document.addEventListener("keydown",e=>{
+  const inInput=/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
+  if(e.key==="/"&&!inInput){ e.preventDefault(); $("#search").focus(); return; }
+  if(inInput) return;
+  if(e.key==="["||e.key==="]"){
+    const h=decodeURIComponent(location.hash.slice(1)||"/");
+    if(h.startsWith("/skill/")){ const s=byId.get(h.slice(7)); if(!s) return;
+      const t=topicOfSkill[s.id];
+      const arr=(t&&t.n>=2?t.members.map(i=>byId.get(i)):S.filter(x=>x.cat===s.cat));
+      const i=arr.indexOf(s); const nt=e.key==="]"?arr[i+1]:arr[i-1];
+      if(nt) location.hash="#/skill/"+encodeURIComponent(nt.id); } }
+});
+window.addEventListener("scroll",()=>{ $("#topBtn").style.display=window.scrollY>500?"flex":"none"; });
+$("#topBtn").addEventListener("click",()=>window.scrollTo({top:0,behavior:"smooth"}));
+$("#menuBtn").addEventListener("click",()=>$("#sidebar").classList.toggle("open"));
+window.addEventListener("hashchange",route);
+route();
+</script>
+</body>
+</html>

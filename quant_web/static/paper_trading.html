@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>模拟盘 · 牧云天枢</title>
+  <link rel="stylesheet" href="/styles.css" />
+  <style>
+    body { margin:0; padding:20px; background:#1a1c23; color:#e5e7eb; font-family:system-ui,sans-serif; display:block; }
+    .container { max-width:1200px; margin:0 auto; }
+    h1 { font-size:20px; color:#e8c547; margin-bottom:12px; }
+    h2 { font-size:16px; color:#c0c5ce; margin:20px 0 10px; border-bottom:1px solid #2d3038; padding-bottom:6px; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+    .card { background:#24272d; border:1px solid #2d3038; border-radius:8px; padding:14px; }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th { text-align:left; color:#8b949e; font-weight:600; padding:8px 6px; border-bottom:1px solid #2d3038; }
+    td { padding:6px; border-bottom:1px solid #1e2027; }
+    tr:hover td { background:#1e2027; }
+    .plus { color:#22c55e; }
+    .minus { color:#ef4444; }
+    .buy-btn { background:#1a5c3a; color:white; border:none; border-radius:4px; padding:4px 10px; cursor:pointer; }
+    .sell-btn { background:#b42318; color:white; border:none; border-radius:4px; padding:4px 10px; cursor:pointer; }
+    .form-row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:10px; }
+    .form-row label { font-size:12px; color:#8b949e; min-width:50px; }
+    .form-row input, .form-row select { flex:1; min-width:80px; background:#1a1c23; border:1px solid #3a3d45; border-radius:4px; padding:6px; color:#e5e7eb; font-size:13px; }
+    .form-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:8px; }
+    .btn-primary { background:#2563eb; border:none; border-radius:6px; padding:8px 20px; color:white; cursor:pointer; font-size:14px; }
+    .btn-danger { background:#b42318; border:none; border-radius:6px; padding:8px 20px; color:white; cursor:pointer; font-size:14px; }
+    .btn-secondary { background:#3a3d45; border:none; border-radius:6px; padding:8px 14px; color:#e5e7eb; cursor:pointer; font-size:13px; }
+    .summary-row { display:flex; gap:24px; flex-wrap:wrap; margin-bottom:12px; }
+    .summary-item { text-align:center; min-width:80px; }
+    .summary-item .val { font-size:22px; font-weight:700; }
+    .summary-item .lab { font-size:11px; color:#8b949e; }
+    .tab-bar { display:flex; gap:4px; margin-bottom:12px; }
+    .tab-bar button { background:#2d3038; border:none; border-radius:4px 4px 0 0; padding:8px 16px; color:#8b949e; cursor:pointer; font-size:13px; }
+    .tab-bar button.active { background:#24272d; color:#e5e7eb; border-bottom:2px solid #e8c547; }
+    .msg { padding:8px 12px; border-radius:4px; margin:8px 0; font-size:13px; }
+    .msg-ok { background:#064e3b; color:#a7f3d0; }
+    .msg-err { background:#7f1d1d; color:#fca5a5; }
+    #msgArea { min-height:0; }
+     .preview { margin-top:10px; padding:10px; border:1px solid #3a3d45; border-radius:6px; font-size:12px; line-height:1.7; color:#c9d1d9; }
+     .preview.ok { border-color:#1f6f4a; background:rgba(34,197,94,.08); }
+     .preview.bad { border-color:#9d3138; background:rgba(239,68,68,.1); }
+     .preview .warn { color:#f5c451; }.preview .err { color:#fca5a5; }
+  </style>
+  <link rel="stylesheet" href="/standalone-theme.css?build=20260827" />
+</head>
+<body>
+<div class="container">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+    <div><a href="/" style="color:#60a5fa;text-decoration:none;font-size:12px;margin-right:12px">⌂ 主页面</a><a href="javascript:history.back()" style="color:#9ca3af;text-decoration:none;font-size:12px">← 返回上一页</a></div>
+    <h1>📒 模拟盘</h1>
+    <button class="btn-secondary" onclick="location.href='/'" style="font-size:12px;">← 返回主界面</button>
+  </div>
+
+  <!-- Summary -->
+  <div class="card" id="summaryCard">
+    <div class="summary-row" id="summaryRow">
+      <div class="summary-item"><div class="val" id="s_total_value">-</div><div class="lab">总市值</div></div>
+      <div class="summary-item"><div class="val" id="s_cash">-</div><div class="lab">可用资金</div></div>
+      <div class="summary-item"><div class="val" id="s_total_pnl">-</div><div class="lab">总盈亏</div></div>
+      <div class="summary-item"><div class="val" id="s_position_count">-</div><div class="lab">持仓数</div></div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tab-bar">
+    <button class="active" data-tab="positions-tab" onclick="switchTab('positions')">📊 当前持仓</button>
+    <button data-tab="trades-tab" onclick="switchTab('trades')">📋 交易记录</button>
+    <button data-tab="reconciliation-tab" onclick="switchTab('reconciliation')">订单对账</button>
+  </div>
+
+  <!-- Positions -->
+  <div id="positions-tab">
+    <div class="card" style="overflow-x:auto;">
+      <table id="positionsTable">
+        <thead>
+          <tr><th>代码</th><th>名称</th><th>持股</th><th>成本价</th><th>现价</th><th>市值</th><th>盈亏</th><th>盈亏%</th><th>操作</th></tr>
+        </thead>
+        <tbody id="positionsBody">
+          <tr><td colspan="9" style="text-align:center;color:#8b949e;">加载中...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Trades -->
+  <div id="trades-tab" style="display:none;">
+    <div class="card" style="overflow-x:auto;">
+      <table id="tradesTable">
+        <thead>
+          <tr><th>时间</th><th>代码</th><th>名称</th><th>方向</th><th>股数</th><th>价格</th><th>金额</th><th>备注</th></tr>
+        </thead>
+        <tbody id="tradesBody">
+          <tr><td colspan="8" style="text-align:center;color:#8b949e;">加载中...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="margin-top:8px;text-align:right;">
+      <button class="btn-secondary" onclick="loadTrades()">🔄 刷新交易记录</button>
+    </div>
+  </div>
+
+  <div id="reconciliation-tab" style="display:none;">
+    <div class="card"><div class="summary-row" id="reconSummary"></div><div style="overflow-x:auto"><table><thead><tr><th>订单</th><th>代码</th><th>方向</th><th>状态</th><th>请求</th><th>成交</th><th>成交率</th><th>不利滑点</th></tr></thead><tbody id="reconBody"><tr><td colspan="8">加载中...</td></tr></tbody></table></div><div style="margin-top:8px;text-align:right"><button class="btn-secondary" onclick="loadReconciliation()">刷新对账</button></div></div>
+    <div class="card" style="margin-top:12px;overflow-x:auto"><h2>逐笔成交事件</h2><table><thead><tr><th>成交ID</th><th>订单</th><th>代码</th><th>方向</th><th>股数</th><th>价格</th><th>佣金</th><th>印花税</th><th>过户费</th><th>时间</th></tr></thead><tbody id="fillBody"><tr><td colspan="10">加载中...</td></tr></tbody></table></div>
+  </div>
+
+  <!-- Message Area -->
+  <div id="msgArea"></div>
+
+  <!-- Buy / Sell forms -->
+  <div class="grid">
+    <div class="card">
+      <h2>🟢 买入</h2>
+      <div class="form-row"><label>代码</label><input id="buySymbol" placeholder="如 600519" /></div>
+      <div class="form-row"><label>名称</label><input id="buyName" placeholder="贵州茅台" /></div>
+      <div class="form-row"><label>股数</label><input id="buyShares" type="number" value="100" min="1" /></div>
+      <div class="form-row"><label>价格</label><input id="buyPrice" type="number" step="0.01" placeholder="如 188.50" /></div>
+      <div class="form-row"><label>信号</label><input id="buySignal" placeholder="可选" /></div>
+      <div class="form-row"><label>备注</label><input id="buyNotes" placeholder="可选" /></div>
+      <div class="form-actions">
+        <button class="btn-secondary" onclick="previewOrder('buy')">预览买入</button><button class="btn-primary" id="buyConfirmBtn" onclick="doBuy()" disabled>确认买入</button><div class="preview" id="buyPreview">填写委托后先预览资金、手续费、整手与仓位校验。</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>🔴 卖出</h2>
+      <div class="form-row"><label>代码</label><input id="sellSymbol" placeholder="如 600519" /></div>
+      <div class="form-row"><label>股数</label><input id="sellShares" type="number" value="100" min="1" /></div>
+      <div class="form-row"><label>价格</label><input id="sellPrice" type="number" step="0.01" placeholder="如 200.00" /></div>
+      <div class="form-row"><label>备注</label><input id="sellNotes" placeholder="可选" /></div>
+      <div class="form-actions">
+        <button class="btn-secondary" onclick="previewOrder('sell')">预览卖出</button><button class="btn-danger" id="sellConfirmBtn" onclick="doSell()" disabled>确认卖出</button><div class="preview" id="sellPreview">填写委托后先预览可卖持仓、税费与整手校验。</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="quant_auth.js"></script>
+<script>
+async function apiGet(path) {
+  const r = await window.quantApiFetch(path);
+  return await r.json();
+}
+async function apiPost(path, body) {
+  const r = await window.quantApiFetch(path, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+  return await r.json();
+}
+
+function showMsg(text, ok) {
+  const el = document.getElementById('msgArea');
+  el.innerHTML = '<div class="msg ' + (ok ? 'msg-ok' : 'msg-err') + '">' + escapeHtml(text) + '</div>';
+  setTimeout(() => el.innerHTML = '', 5000);
+}
+
+function prefillDraft(){
+  const params = new URLSearchParams(location.search);
+  const buyFields = { buySymbol:'symbol', buyName:'name', buyShares:'shares', buyPrice:'price' };
+  const sellFields = { sellSymbol:'sell_symbol', sellShares:'sell_shares', sellPrice:'sell_price' };
+  Object.entries(buyFields).forEach(([id,key])=>{ const value=params.get(key); if(value) document.getElementById(id).value=value; });
+  Object.entries(sellFields).forEach(([id,key])=>{ const value=params.get(key); if(value) document.getElementById(id).value=value; });
+  if(params.get('symbol')) invalidatePreview('buy');
+  if(params.get('sell_symbol')) invalidatePreview('sell');
+}
+
+let previewOrderIds = { buy: null, sell: null };
+function orderPayload(direction) {
+  const prefix = direction === 'buy' ? 'buy' : 'sell';
+  return {
+    direction,
+    symbol: document.getElementById(prefix + 'Symbol').value.trim(),
+    shares: parseInt(document.getElementById(prefix + 'Shares').value) || 0,
+    price: parseFloat(document.getElementById(prefix + 'Price').value) || 0,
+  };
+}
+
+function invalidatePreview(direction) {
+  const prefix = direction === 'buy' ? 'buy' : 'sell';
+  previewOrderIds[direction] = null;
+  const confirm = document.getElementById(prefix + 'ConfirmBtn');
+  if (confirm) confirm.disabled = true;
+  const box = document.getElementById(prefix + 'Preview');
+  if (box) { box.className = 'preview'; box.textContent = '参数已变更，请重新预览后确认。'; }
+}
+
+async function previewOrder(direction) {
+  const prefix = direction === 'buy' ? 'buy' : 'sell';
+  const box = document.getElementById(prefix + 'Preview');
+  const confirm = document.getElementById(prefix + 'ConfirmBtn');
+  if (confirm) confirm.disabled = true;
+  if (box) { box.className = 'preview'; box.textContent = '正在校验纸面资金、整手、持仓和费用...'; }
+  try {
+    const res = await apiPost('/api/paper/preview', orderPayload(direction));
+    if (!res.ok) throw new Error(res.error || '预览失败');
+    const p = res.preview || {};
+    previewOrderIds[direction] = p.allowed ? p.client_order_id : null;
+    const errors = p.errors || [], warnings = p.warnings || [];
+    if (box) {
+      box.className = 'preview ' + (p.allowed ? 'ok' : 'bad');
+      box.innerHTML = `<b>${p.allowed ? '预检通过，可确认提交' : '预检未通过，禁止提交'}</b><br>` +
+        `委托 ${p.symbol || '-'} · ${p.shares || 0} 股 @ ${Number(p.price || 0).toFixed(2)}<br>` +
+        `金额 ${Number(p.gross_amount || 0).toFixed(2)} · 手续费 ${Number(p.estimated_commission || 0).toFixed(2)} · 印花税 ${Number(p.estimated_stamp_tax || 0).toFixed(2)}<br>` +
+        (direction === 'buy' ? `纸面可用资金 ${Number(p.available_cash || 0).toFixed(2)}` : `当前可卖 ${p.held_shares || 0} 股`) +
+        (warnings.length ? `<br><span class="warn">⚠️ ${warnings.map(escapeHtml).join('；')}</span>` : '') +
+        (errors.length ? `<br><span class="err">❌ ${errors.map(escapeHtml).join('；')}</span>` : '');
+    }
+    if (confirm) confirm.disabled = !p.allowed;
+  } catch (e) {
+    if (box) { box.className = 'preview bad'; box.textContent = '预检失败: ' + e.message; }
+  }
+}
+
+function escapeHtml(value) { return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function switchTab(name) {
+  document.querySelectorAll('.tab-bar button').forEach(b => b.classList.remove('active'));
+  document.querySelector('[data-tab="'+name+'-tab"]').classList.add('active');
+  document.getElementById('positions-tab').style.display = name === 'positions' ? '' : 'none';
+  document.getElementById('trades-tab').style.display = name === 'trades' ? '' : 'none';
+  document.getElementById('reconciliation-tab').style.display = name === 'reconciliation' ? '' : 'none';
+  if (name === 'reconciliation') loadReconciliation();
+}
+
+async function loadPositions() {
+  const res = await apiGet('/api/paper/positions');
+  if (!res.ok) { showMsg('获取持仓失败: ' + (res.error||'未知'), false); return; }
+
+  const positions = res.positions || [];
+  const summary = res.summary || {};
+
+  // Summary
+  document.getElementById('s_total_value').textContent = (summary.total_value || 0).toFixed(2);
+  document.getElementById('s_cash').textContent = (summary.available_cash || 0).toFixed(2);
+  const pnl = summary.total_pnl || 0;
+  document.getElementById('s_total_pnl').textContent = (pnl >= 0 ? '+' : '') + pnl.toFixed(2);
+  document.getElementById('s_total_pnl').className = 'val' + (pnl >= 0 ? ' plus' : ' minus');
+  document.getElementById('s_position_count').textContent = positions.length;
+
+  const tbody = document.getElementById('positionsBody');
+  if (positions.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#8b949e;">暂无持仓</td></tr>';
+    return;
+  }
+  tbody.innerHTML = positions.map(p => {
+    const pnlVal = p.pnl || 0;
+    const pnlPct = p.pnl_pct || 0;
+    const cls = pnlVal >= 0 ? 'plus' : 'minus';
+    return '<tr>' +
+      '<td>' + escapeHtml(p.symbol||'') + '</td>' +
+      '<td>' + escapeHtml(p.name||'') + '</td>' +
+      '<td>' + (p.shares||0) + '</td>' +
+      '<td>' + (p.cost_price||0).toFixed(2) + '</td>' +
+      '<td>' + (p.current_price||'-') + '</td>' +
+      '<td>' + (p.total_value||0).toFixed(2) + '</td>' +
+      '<td class="'+cls+'">' + (pnlVal >= 0 ? '+' : '') + pnlVal.toFixed(2) + '</td>' +
+      '<td class="'+cls+'">' + (pnlPct >= 0 ? '+' : '') + pnlPct.toFixed(2) + '</td>' +
+      '<td><button class="sell-btn" onclick="quickSell(\''+p.symbol+'\','+p.shares+')">卖</button></td>' +
+      '</tr>';
+  }).join('');
+}
+
+async function loadTrades() {
+  const res = await apiGet('/api/paper/trades?days=90');
+  if (!res.ok) { showMsg('获取交易记录失败: ' + (res.error||'未知'), false); return; }
+
+  const trades = res.trades || [];
+  const tbody = document.getElementById('tradesBody');
+  if (trades.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#8b949e;">暂无交易记录</td></tr>';
+    return;
+  }
+  tbody.innerHTML = trades.map(t => {
+    const isBuy = t.trade_type === 'buy';
+    return '<tr>' +
+      '<td>' + escapeHtml(t.trade_date||'') + '</td>' +
+      '<td>' + escapeHtml(t.symbol||'') + '</td>' +
+      '<td>' + escapeHtml(t.name||'') + '</td>' +
+      '<td style="color:' + (isBuy ? '#22c55e' : '#ef4444') + '">' + (isBuy ? '买入' : '卖出') + '</td>' +
+      '<td>' + (t.shares||0) + '</td>' +
+      '<td>' + (t.price||0).toFixed(2) + '</td>' +
+      '<td>' + (t.total_amount||0).toFixed(2) + '</td>' +
+      '<td>' + escapeHtml(t.notes||'') + '</td>' +
+      '</tr>';
+  }).join('');
+}
+
+async function loadReconciliation() {
+  try {
+    const [report, fillsResult] = await Promise.all([apiGet('/api/paper/reconciliation'), apiGet('/api/paper/fills')]);
+    if (!report.ok || !fillsResult.ok) throw new Error(report.error || fillsResult.error || '对账读取失败');
+    const r = report.reconciliation || {}, s = r.summary || {}, rows = r.rows || [], fills = fillsResult.fills || [];
+    document.getElementById('reconSummary').innerHTML = [
+      ['订单', s.orders || 0], ['完全成交', s.filled_orders || 0], ['部分成交', s.partial_orders || 0],
+      ['未成交', s.unfilled_orders || 0], ['总成交率', ((s.fill_rate || 0) * 100).toFixed(1) + '%'],
+      ['P95不利滑点', s.p95_adverse_slippage_bps == null ? '--' : Number(s.p95_adverse_slippage_bps).toFixed(2) + ' bps']
+    ].map(x => `<div class="summary-item"><div class="val">${escapeHtml(x[1])}</div><div class="lab">${x[0]}</div></div>`).join('');
+    document.getElementById('reconBody').innerHTML = rows.map(x => `<tr><td>${escapeHtml(x.order_id)}</td><td>${escapeHtml(x.symbol)}</td><td>${escapeHtml(x.side)}</td><td>${escapeHtml(x.fill_status)}</td><td>${x.requested_shares || 0}</td><td>${x.filled_shares || 0}</td><td>${(Number(x.fill_rate || 0) * 100).toFixed(1)}%</td><td>${x.slippage_bps == null ? '--' : Number(x.slippage_bps).toFixed(2) + ' bps'}</td></tr>`).join('') || '<tr><td colspan="8">暂无纸面订单</td></tr>';
+    document.getElementById('fillBody').innerHTML = fills.map(x => `<tr><td>${escapeHtml(x.execution_id || x.fill_id)}</td><td>${escapeHtml(x.order_id)}</td><td>${escapeHtml(x.symbol)}</td><td>${escapeHtml(x.side)}</td><td>${x.filled_shares || 0}</td><td>${Number(x.filled_price || 0).toFixed(3)}</td><td>${Number(x.commission || 0).toFixed(2)}</td><td>${Number(x.stamp_tax || 0).toFixed(2)}</td><td>${Number(x.transfer_fee || 0).toFixed(2)}</td><td>${escapeHtml(x.filled_at || '')}</td></tr>`).join('') || '<tr><td colspan="10">暂无成交事件</td></tr>';
+  } catch (e) { showMsg('对账读取失败: ' + e.message, false); }
+}
+
+async function doBuy() {
+  const symbol = document.getElementById('buySymbol').value.trim();
+  const name = document.getElementById('buyName').value.trim();
+  const shares = parseInt(document.getElementById('buyShares').value) || 0;
+  const price = parseFloat(document.getElementById('buyPrice').value) || 0;
+  const signal = document.getElementById('buySignal').value.trim();
+  const notes = document.getElementById('buyNotes').value.trim();
+  if (!symbol) { showMsg('请输入股票代码', false); return; }
+  if (shares <= 0 || price <= 0) { showMsg('请填写有效的股数和价格', false); return; }
+
+  if (document.getElementById('buyConfirmBtn').disabled) { showMsg('请先完成买入预检', false); return; }
+  const res = await apiPost('/api/paper/buy', { symbol, name, shares, price, signal, notes, client_order_id: previewOrderIds.buy });
+  if (res.ok) {
+    showMsg('✅ 买入成功: ' + symbol + ' ' + shares + '股 @' + price, true);
+    loadPositions();
+    loadTrades();
+    document.getElementById('buySymbol').value = '';
+    document.getElementById('buyName').value = '';
+    document.getElementById('buyPrice').value = '';
+    document.getElementById('buySignal').value = '';
+    document.getElementById('buyNotes').value = '';
+  } else {
+    showMsg('❌ 买入失败: ' + (res.error||'未知错误'), false);
+  }
+}
+
+async function doSell() {
+  const symbol = document.getElementById('sellSymbol').value.trim();
+  const shares = parseInt(document.getElementById('sellShares').value) || 0;
+  const price = parseFloat(document.getElementById('sellPrice').value) || 0;
+  const notes = document.getElementById('sellNotes').value.trim();
+  if (!symbol) { showMsg('请输入股票代码', false); return; }
+  if (shares <= 0 || price <= 0) { showMsg('请填写有效的股数和价格', false); return; }
+
+  if (document.getElementById('sellConfirmBtn').disabled) { showMsg('请先完成卖出预检', false); return; }
+  const res = await apiPost('/api/paper/sell', { symbol, shares, price, notes, client_order_id: previewOrderIds.sell });
+  if (res.ok) {
+    const pnlMsg = res.realized_pnl ? ' 实现盈亏: ' + (res.realized_pnl >= 0 ? '+' : '') + res.realized_pnl.toFixed(2) : '';
+    showMsg('✅ 卖出成功: ' + symbol + ' ' + shares + '股 @' + price + pnlMsg, true);
+    loadPositions();
+    loadTrades();
+    document.getElementById('sellSymbol').value = '';
+    document.getElementById('sellPrice').value = '';
+    document.getElementById('sellNotes').value = '';
+  } else {
+    showMsg('❌ 卖出失败: ' + (res.error||'未知错误'), false);
+  }
+}
+
+function quickSell(symbol, shares) {
+  document.getElementById('sellSymbol').value = symbol;
+  document.getElementById('sellShares').value = shares;
+  document.getElementById('sellPrice').focus();
+  window.scrollTo({ top: document.querySelector('.grid').offsetTop, behavior: 'smooth' });
+}
+
+['buySymbol','buyShares','buyPrice'].forEach(id => document.getElementById(id)?.addEventListener('input', () => invalidatePreview('buy')));
+['sellSymbol','sellShares','sellPrice'].forEach(id => document.getElementById(id)?.addEventListener('input', () => invalidatePreview('sell')));
+
+// Auto-refresh every 30s
+setInterval(() => {
+  const posTab = document.getElementById('positions-tab');
+  if (posTab.style.display !== 'none') loadPositions();
+  const tradesTab = document.getElementById('trades-tab');
+  if (tradesTab.style.display !== 'none') loadTrades();
+  const reconTab = document.getElementById('reconciliation-tab');
+  if (reconTab.style.display !== 'none') loadReconciliation();
+}, 30000);
+
+prefillDraft();
+loadPositions();
+loadTrades();
+</script>
+</body>
+</html>

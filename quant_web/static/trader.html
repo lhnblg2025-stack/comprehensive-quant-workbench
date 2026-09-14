@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>行情交易员 · 牧云天枢</title>
+  <link rel="stylesheet" href="/styles.css" />
+  <script src="/quant_auth.js"></script>
+  <script src="/plotly.min.js"></script>
+  <style>
+    body { margin:0; padding:20px; background:#0d1117; color:#e6edf3;
+           font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+           display:block; }
+    .trader-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+    .trader-head h1 { font-size:20px; margin:0; color:#58a6ff; }
+    .trader-head a { color:#8b949e; text-decoration:none; font-size:13px; }
+    .trader-head a:hover { color:#58a6ff; }
+    .trader-grid { display:grid; grid-template-columns:3fr 2fr; gap:14px; align-items:start; }
+    .card { background:#161b22; border:1px solid #30363d; border-radius:10px; padding:14px; }
+    .card h3 { font-size:14px; color:#58a6ff; margin:0 0 10px; }
+    #klineChart { width:100%; height:520px; }
+    #heatmapChart { width:100%; height:440px; }
+    #flowChart { width:100%; height:360px; }
+    .kline-tools { display:flex; gap:8px; align-items:center; margin-bottom:10px; flex-wrap:wrap; }
+    .kline-tools input[type=text] { width:230px; background:#0d1117; border:1px solid #30363d;
+      color:#e6edf3; border-radius:6px; padding:6px 10px; font-size:13px; }
+    .kline-tools button { background:#2563eb; border:none; color:#fff; border-radius:6px;
+      padding:6px 14px; font-size:13px; cursor:pointer; }
+    .idx-shortcuts button { background:#1c2128; border:1px solid #30363d; color:#8b949e;
+      border-radius:6px; padding:4px 10px; font-size:12px; cursor:pointer; }
+    .idx-shortcuts button:hover { color:#58a6ff; border-color:#58a6ff; }
+    .tabs button { background:transparent; border:1px solid #30363d; color:#8b949e;
+      border-radius:6px; padding:4px 10px; font-size:12px; cursor:pointer; margin-right:6px; }
+    .tabs button.active { color:#58a6ff; border-color:#58a6ff; background:rgba(88,166,255,.12); }
+    .trader-meta { font-size:12px; color:#8b949e; margin-top:8px; line-height:1.8; }
+    .trader-meta b { color:#e6edf3; }
+    .chip { display:inline-block; padding:1px 8px; border-radius:10px; font-size:12px;
+            margin:0 4px 4px 0; }
+    .chip.up { background:rgba(246,70,93,.15); color:#f6465d; }
+    .chip.flat { background:rgba(139,148,158,.15); color:#8b949e; }
+    .kline-search { position:relative; }
+    #suggest { position:absolute; z-index:50; top:100%; left:0; width:260px;
+               background:#161b22; border:1px solid #30363d; border-radius:6px;
+               max-height:260px; overflow:auto; display:none; }
+    #suggest div { padding:6px 10px; font-size:12px; cursor:pointer; color:#c9d1d9; }
+    #suggest div:hover { background:#1c2128; color:#58a6ff; }
+    table.stock-table { width:100%; border-collapse:collapse; font-size:13px; }
+    table.stock-table th { text-align:left; color:#8b949e; font-weight:600; padding:7px 6px;
+                           border-bottom:1px solid #30363d; white-space:nowrap; width:120px; }
+    table.stock-table td { padding:6px; border-bottom:1px solid #1e2027; }
+    .up-text { color:#f6465d; }
+    .down-text { color:#2ebd85; }
+    .flat-text { color:#8b949e; }
+    .no-data { color:#8b949e; font-size:13px; padding:36px 10px; text-align:center;
+               border:1px dashed #30363d; border-radius:8px; }
+    @media (max-width:1100px){ .trader-grid { grid-template-columns:1fr; } }
+  </style>
+  <link rel="stylesheet" href="/standalone-theme.css?build=20260827" />
+</head>
+<body>
+  <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><a href="/" style="color:#58a6ff;text-decoration:none">⌂ 主页面</a><a href="javascript:history.back()" style="color:#8b949e;text-decoration:none">← 返回上一页</a><span style="color:#8b949e;font-size:12px">主页面缓存不会因返回而清除</span></div>
+  <div class="trader-head">
+    <h1>📈 行情交易员</h1>
+    <a href="/">← 返回总看板</a>
+  </div>
+  <div class="trader-grid">
+    <section class="card">
+      <h3>🕯️ K线（日K · 前复权）
+        <span id="klineTitle" style="float:right;color:#8b949e;font-size:12px;font-weight:400"></span>
+      </h3>
+      <div class="kline-tools">
+        <div class="kline-search">
+          <input type="text" id="klineSearch" placeholder="搜索股票 / 代码（600519 / 贵州茅台）" autocomplete="off" />
+          <div id="suggest"></div>
+        </div>
+        <button id="klineGo">查询</button>
+        <div class="idx-shortcuts">
+          <button data-symbol="sh000001">上证</button>
+          <button data-symbol="sz399001">深成</button>
+          <button data-symbol="sz399006">创业板</button>
+          <button data-symbol="sh000300">沪深300</button>
+        </div>
+      </div>
+      <div id="klineChart"></div>
+      <div id="klineMeta" class="trader-meta"></div>
+    </section>
+
+    <section class="card">
+      <h3>🗺️ 全市场热力图（行业大块 · 个股小块）</h3>
+      <div class="tabs" style="margin-bottom:8px">
+        <button data-hm="market" class="active">涨跌·市值</button>
+        <button data-hm="fund">资金流入流出</button>
+        <button data-hm="sw1">申万一级</button>
+        <button data-hm="concept">概念</button>
+      </div>
+      <div id="heatmapChart"></div>
+      <div id="heatmapMeta" class="trader-meta"></div>
+    </section>
+
+    <section class="card">
+      <h3>💧 主力净流入瀑布（亿元 · 红正绿负）</h3>
+      <div class="tabs" style="margin-bottom:8px">
+        <button data-ff="concept" class="active">概念</button>
+        <button data-ff="sector">行业</button>
+      </div>
+      <div id="flowChart"></div>
+    </section>
+
+    <section class="card">
+      <h3>📋 交互式复盘卡
+        <span id="cardTitle" style="font-size:12px;color:#8b949e;font-weight:400"></span>
+      </h3>
+      <div id="stockCard" class="trader-meta" style="margin-top:0"></div>
+    </section>
+  </div>
+  <script src="/echarts.min.js"></script>
+  <script src="/trader.js"></script>
+</body>
+</html>

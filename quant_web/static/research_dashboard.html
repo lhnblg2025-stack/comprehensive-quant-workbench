@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>深度投研看板</title>
+<style>
+  :root { --bg:#0d1117; --card:#161b22; --border:#30363d; --text:#e6edf3; --muted:#8b949e;
+          --green:#3fb950; --red:#f85149; --yellow:#d29922; --blue:#58a6ff; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font-family:"PingFang SC","Microsoft YaHei",sans-serif; padding:16px; }
+  h1 { font-size:20px; margin-bottom:12px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(340px,1fr)); gap:12px; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:14px; }
+  .card h3 { font-size:14px; color:var(--blue); margin-bottom:8px; }
+  .big { font-size:34px; font-weight:700; }
+  .row { display:flex; justify-content:space-between; padding:3px 0; font-size:13px; }
+  .muted { color:var(--muted); font-size:12px; }
+  .tag { display:inline-block; padding:2px 8px; border-radius:12px; font-size:12px; margin-left:6px; }
+  .hot { background:rgba(248,81,73,.15); color:var(--red); }
+  .warm { background:rgba(210,153,34,.15); color:var(--yellow); }
+  .cold { background:rgba(88,166,255,.15); color:var(--blue); }
+  .ice  { background:rgba(139,148,158,.15); color:var(--muted); }
+  input[type=text] { width:70%; background:var(--bg); border:1px solid var(--border); color:var(--text);
+    border-radius:6px; padding:6px 10px; font-size:13px; }
+  button { background:var(--blue); border:none; color:#fff; border-radius:6px; padding:6px 14px; font-size:13px; cursor:pointer; }
+  #ragResults { margin-top:8px; font-size:12px; }
+  #ragResults div { background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:8px; margin-bottom:6px; }
+  .err { color:var(--red); font-size:12px; }
+  pre { white-space:pre-wrap; font-size:12px; color:var(--muted); max-height:220px; overflow:auto; }
+  .fusion-tools { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:10px; }
+  .fusion-tools input { width:min(320px,100%); }
+  .fusion-status { display:flex; gap:8px; flex-wrap:wrap; margin:8px 0 12px; }
+  .fusion-pill { border:1px solid var(--border); border-radius:12px; padding:3px 8px; font-size:11px; color:var(--muted); }
+  .fusion-kpis { display:grid; grid-template-columns:repeat(3,minmax(100px,1fr)); gap:8px; margin-bottom:12px; }
+  .fusion-kpi { border-left:3px solid var(--blue); background:var(--bg); padding:8px 10px; min-height:58px; }
+  .fusion-kpi b { display:block; font-size:18px; margin-top:4px; }
+  .fusion-layout { display:grid; grid-template-columns:minmax(280px,1fr) minmax(320px,1.3fr); gap:12px; }
+  #fusionFlowChart { width:100%; height:260px; }
+  .fusion-tables { display:grid; grid-template-columns:repeat(2,minmax(260px,1fr)); gap:10px; }
+  .fusion-table { overflow:auto; max-height:250px; border:1px solid var(--border); }
+  .fusion-table h4 { position:sticky; top:0; background:#21262d; padding:7px 8px; font-size:12px; color:var(--blue); z-index:1; }
+  .fusion-table table { width:100%; border-collapse:collapse; font-size:12px; }
+  .fusion-table th,.fusion-table td { padding:6px 8px; border-top:1px solid var(--border); text-align:left; white-space:nowrap; }
+  .fusion-table tbody tr { cursor:pointer; }
+  .fusion-table tbody tr:hover { background:#21262d; }
+  .fusion-detail { margin-top:10px; padding:9px; background:var(--bg); border:1px solid var(--border); min-height:38px; font-size:12px; }
+  @media(max-width:800px) { .fusion-layout,.fusion-tables { grid-template-columns:1fr; } .fusion-kpis { grid-template-columns:1fr; } }
+</style>
+<link rel="stylesheet" href="/standalone-theme.css?build=20260827">
+</head>
+<body>
+<nav style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)">
+  <button type="button" onclick="goHome()">⌂ 主页面</button>
+  <button type="button" onclick="location.href='/review.html'">📊 复盘</button><button type="button" onclick="location.href='/research_report.html'">📑 统一研报</button>
+  <button type="button" onclick="location.href='/base_panorama.html'">🗃️ 数据基座</button>
+  <button type="button" onclick="location.href='/knowledge_base.html'">📚 方法论</button><button type="button" onclick="location.href='/research_images.html'">🖼️ 图像证据</button>
+  <button type="button" onclick="history.back()">← 返回上一页</button>
+  <label class="muted">研究日 <input type="date" id="researchDate" style="width:150px" onchange="setResearchDate(this.value)"></label><button type="button" onclick="setResearchDate('')">最新可用日</button>
+  <span class="muted" id="researchDateContext">选择日期查看当日研究结果</span>
+</nav>
+<h1>📊 统一投研决策看板</h1>
+<div class="grid">
+  <div class="card" style="grid-column:1/-1; border-color:#f0b429;">
+    <h3>🗺️ 作战地图（决策大脑）
+      <span style="float:right;font-size:12px">
+        <button onclick="sendFeedback('like')" style="margin-right:4px">👍 采纳</button>
+        <button onclick="sendFeedback('dislike')">👎 否决</button>
+      </span>
+    </h3>
+    <div id="battleMap"><span class="muted">加载中…</span></div>
+    <div id="fbMsg" style="font-size:12px;color:#8b949e;margin-top:6px"></div>
+  </div>
+  <div class="card">
+    <h3>🔥 市场融合温度</h3>
+    <div id="fusion"><span class="muted">加载中…</span></div>
+  </div>
+  <div class="card">
+    <h3>🌡️ 情绪周期</h3>
+    <div id="emotion"><span class="muted">加载中…</span></div>
+  </div>
+  <div class="card">
+    <h3>🪜 连板天梯（近3日）</h3>
+    <div id="ladder"><span class="muted">加载中…</span></div>
+  </div>
+  <div class="card">
+    <h3>📋 决策卡片</h3>
+    <div id="decision"><span class="muted">加载中…</span></div>
+  </div>
+  <div class="card" style="grid-column:1/-1">
+    <h3>全天资金流向 · 行业 / 概念 / ETF</h3>
+    <div class="fusion-tools">
+      <input type="text" id="fusionKeyword" placeholder="筛选代码、名称、行业或概念">
+      <button type="button" onclick="loadResearchFusion(true)">更新数据</button>
+      <span class="muted">按数据日期查看，不把缺失源伪装成结论</span>
+    </div>
+    <div id="fusionMeta" class="muted">加载中…</div>
+    <div id="fusionSourceStatus" class="fusion-status"></div>
+    <div id="fusionKpis" class="fusion-kpis"></div>
+    <div class="fusion-layout">
+      <div id="fusionFlowChart"></div>
+      <div id="fusionTables" class="fusion-tables"></div>
+    </div>
+    <div id="fusionDetail" class="fusion-detail muted">选择任一行查看标的详情</div>
+  </div>
+  <div class="card" style="grid-column:1/-1">
+    <h3>🧭 研究流程状态</h3>
+    <div id="chainStatus"><span class="muted">加载中…</span></div>
+  </div>
+  <div class="card" style="grid-column:1/-1">
+    <h3>⛓️ 产业链历史观察</h3>
+    <div class="fusion-tools"><input type="text" id="industryChainName" placeholder="产业链名称，留空查看全部"><button type="button" onclick="loadIndustryChain()">读取产业链</button></div>
+    <div id="industryChainStatus" class="muted">按研究日读取真实产业链历史，不用市场代理替代。</div>
+  </div>
+  <div class="card" style="grid-column:1/-1">
+    <h3>📚 当前决策的研究依据</h3>
+    <div class="fusion-tools"><input type="text" id="decisionKnowledgeQuery" placeholder="输入主题、风险或候选关键词"><button type="button" onclick="searchDecisionKnowledge()">检索方法论</button><button type="button" onclick="suggestDecisionKnowledge()">按当前主线/风险推荐</button></div>
+    <div id="decisionKnowledgeResults" class="muted">输入关键词，或按当前决策推荐相关技能与研究方法。</div>
+  </div>
+</div>
+
+<script src="/echarts.min.js"></script><script src="/quant_auth.js"></script><script>
+function goHome(){ window.location.assign('/'); }
+async function get(url){ return window.quantApiWait(url, {}, 60, 1000); }
+let researchFusionData = null;
+let fusionChart = null;
+let researchDate = '';
+function setResearchDate(date){ researchDate = date || ''; const input=document.getElementById('researchDate'); if(input) input.value=researchDate; loadResearchFusion(false); loadSources(); }
+function researchQuery(base){ return researchDate ? `${base}${base.includes('?') ? '&' : '?'}date=${encodeURIComponent(researchDate)}` : base; }
+
+function tagClass(t){
+  if(t.includes('高温')) return 'hot'; if(t.includes('常温')) return 'warm';
+  if(t.includes('低温')) return 'cold'; return 'ice';
+}
+
+async function loadDaily(){
+  try{
+    const d = await get(researchQuery('/api/v11/daily?refresh=true'));
+    const decisionEl = document.getElementById('decision');
+    decisionEl.querySelector('.report-meta')?.remove();
+    if (d.report_date) decisionEl.insertAdjacentHTML('afterbegin', `<div class="muted report-meta" style="margin:8px 0;color:var(--yellow)">研报数据日：${escapeHtml(d.report_date)} · 更新时间：${escapeHtml((d.report_generated_at || '').replace('T',' ').slice(0,19))}</div>`);
+    // 融合温度
+    if(d.fusion){
+      const f = d.fusion;
+      document.getElementById('fusion').innerHTML =
+        `<div class="big">${f.temperature}<span class="muted" style="font-size:16px">/100</span></div>
+         <span class="tag ${tagClass(f.tag)}">${f.tag}</span>
+         <div class="muted" style="margin-top:6px">${f.date} · 情绪阶段: ${f.emotion_stage}</div>`;
+    }
+    // 情绪周期
+    if(d.emotion && d.emotion.stage_cn){
+      const e = d.emotion;
+      const tp = e.transition_probs ? Object.entries(e.transition_probs).map(([k,v])=>`${escapeHtml(k)} ${(v*100).toFixed(0)}%`).join(' · ') : '';
+      document.getElementById('emotion').innerHTML =
+        `<div class="big" style="font-size:26px">${e.stage_cn}</div>
+         <div class="muted">可信度 ${escapeHtml(e.confidence)} · 明日阶段变化概率：${escapeHtml(tp)}</div>
+         <div class="row"><span>涨停${e.zt_cnt} 最高${e.max_board}板</span></div>`;
+    }
+    // 天梯
+    if(d.ladder){
+      document.getElementById('ladder').innerHTML = d.ladder.days.map(r =>
+        `<div class="row"><span>${escapeHtml(r.date)}</span><span>涨停${escapeHtml(r.zt_cnt)} · 炸板${escapeHtml(r.zb_cnt)} · 跌停${escapeHtml(r.dt_cnt)} · 最高${escapeHtml(r.max_board)}板</span></div>`
+      ).join('');
+    }
+    // 决策卡片
+    if(d.decision_card && d.decision_card.stance){
+      const c = d.decision_card;
+      document.getElementById('decision').innerHTML =
+        `<div class="row"><span>总基调</span><b>${c.stance}</b></div>
+         <div class="row"><span>仓位</span><b>${c.position_range}</b></div>
+         <div class="muted" style="margin-top:4px">${(c.opportunities||[]).map(o=>`🎯 ${o.target}`).join('<br>')}</div>`;
+    }
+    // 报告原文（折叠）
+    if(d.report_md){
+      const pre = document.createElement('details');
+      pre.innerHTML = `<summary class="muted">📄 完整日报</summary><pre>${escapeHtml(d.report_md)}</pre>`;
+      document.getElementById('decision').appendChild(pre);
+    }
+  }catch(e){
+    document.getElementById('fusion').innerHTML = `<span class="err">加载失败: ${e.message}</span>`;
+  }
+}
+
+async function loadSources(){
+  const box = document.getElementById('chainStatus');
+  try{
+    const results = await Promise.allSettled([get(researchQuery('/api/v11/health')), get(researchQuery('/api/decision_snapshot?mode=after_close'))]);
+    const health = results[0].status === 'fulfilled' ? results[0].value : {ok:false, error: results[0].reason?.message || '健康检查失败'};
+    const snap = results[1].status === 'fulfilled' ? results[1].value : {ok:false, error: results[1].reason?.message || '决策快照失败'};
+    const d = snap || {};
+    const m = d.market || {};
+    const rows = Array.isArray(d.opportunities) ? d.opportunities : [];
+    const mains = Array.isArray(d.mainlines) ? d.mainlines.slice(0, 5) : [];
+    box.innerHTML = `<div class="row"><span>统一链状态</span><b>${d.ok ? '已完成' : '缺失'}</b></div>
+      <div class="row"><span>数据情况</span><span>${health.ok ? '可读取' : '部分不可用：' + escapeHtml(health.error || '未知')}</span></div>
+      <div class="row"><span>分析日期</span><span>${escapeHtml(String(d.as_of || '-'))}</span></div>
+      <div class="row"><span>市场状态</span><span>${escapeHtml(String(m.emotion_stage || '-'))} · 温度${m.temperature ?? '-'} · 资金合力${m.force_index ?? '-'}</span></div>
+      <div class="row"><span>全市场扫描</span><span>${d.counts?.scanned ?? 0} 条 · 主板可执行 ${d.counts?.execution_candidates ?? 0} 条</span></div>
+      <div class="row"><span>主线方向</span><span>${mains.map(x => escapeHtml(String(x.name || x.industry || '-'))).join('、') || '未识别'}</span></div>
+      <div class="row"><span>风险门控</span><span>${(m.risk_flags || []).length ? m.risk_flags.map(escapeHtml).join('；') : '通过'}</span></div>
+      <div class="muted" style="margin-top:8px">研报知识仅作为输入；页面展示决策结果、资金、行业、ETF和风控，不展示 研报图片内容。</div>`;
+  }catch(e){ box.innerHTML = `<span class="err">${escapeHtml(e.message)}</span>`; }
+}
+
+function fusionName(row){ return row.name || row.concept_name || row.sector_name || row.board_name || row.code || row.board_code || '-'; }
+function fusionCode(row){ return row.code || row.symbol || row.board_code || row.board || ''; }
+function fusionDisplay(row){ const n=fusionName(row), c=fusionCode(row); return c ? `${n}（${c}）` : n; }
+function fusionValue(row, keys){ for(const key of keys){ if(row[key] !== null && row[key] !== undefined) return row[key]; } return null; }
+function fmtFusionNumber(value){
+  if(value === null || value === undefined || value === '') return '-';
+  const n = Number(value); if(!Number.isFinite(n)) return escapeHtml(String(value));
+  const a = Math.abs(n);
+  if(a >= 1e8) return `${(n/1e8).toFixed(2)}亿`;
+  if(a >= 1e4) return `${(n/1e4).toFixed(1)}万`;
+  return n.toFixed(Math.abs(n) < 100 ? 2 : 0);
+}
+function fusionRows(title, rows, valueKeys, valueLabel){
+  const q = document.getElementById('fusionKeyword').value.trim().toLowerCase();
+  const filtered = (rows || []).filter(row => JSON.stringify(row).toLowerCase().includes(q));
+  const body = filtered.map(row => {
+    const encoded = encodeURIComponent(JSON.stringify(row));
+    return `<tr data-row="${encoded}" onclick="showFusionDetail(this)"><td>${escapeHtml(fusionDisplay(row))}</td><td>${fmtFusionNumber(fusionValue(row,valueKeys))}</td></tr>`;
+  }).join('');
+  return `<div class="fusion-table"><h4>${escapeHtml(title)} · ${filtered.length}</h4><table><thead><tr><th>标的</th><th>${escapeHtml(valueLabel)}</th></tr></thead><tbody>${body || '<tr><td colspan="2" class="muted">无匹配数据</td></tr>'}</tbody></table></div>`;
+}
+function showFusionDetail(tr){
+  try{
+    const row = JSON.parse(decodeURIComponent(tr.dataset.row));
+    const detailKeys=[['name','名称'],['code','代码'],['date','数据日期'],['as_of','数据日期'],['net_yi','净流入（亿元）'],['main_net_yi','主力净额（亿元）'],['amount','成交额'],['signal','信号'],['status','数据情况']]; const detail=detailKeys.filter(([k])=>row[k]!==undefined&&row[k]!==null).map(([k,label])=>`<div><span class="muted">${label}</span>：${escapeHtml(row[k])}</div>`).join(''); document.getElementById('fusionDetail').innerHTML = `<b>${escapeHtml(fusionDisplay(row))}</b>${detail||'<div class="muted">暂无可读的补充信息</div>'}`;
+  }catch(e){ document.getElementById('fusionDetail').textContent = '详情解析失败'; }
+}
+function renderResearchFusion(){
+  const d = researchFusionData; if(!d) return;
+  const status = d.data_status || {}, market = d.market_summary || {};
+  document.getElementById('fusionMeta').textContent = `查看日期 ${researchDate || d.requested_date || '最近'} · 数据截至 ${d.as_of || '未知'} · ${({available:'可用',missing:'缺失',partial:'部分可用',error:'读取失败',stale:'数据较旧'}[status.status]||'待确认')}（${status.available_sources || 0}/${status.total_sources || 0} 项可用）`;
+  const dateContext = document.getElementById('researchDateContext'); if(dateContext) dateContext.textContent = `查看日期 ${researchDate || d.requested_date || '最近'} · 数据截至 ${d.as_of || '未知'} · 各项数据日期见下方说明。`;
+  document.getElementById('fusionSourceStatus').innerHTML = Object.entries(status.sources || {}).map(([name,s]) =>
+    `<span class="fusion-pill">${escapeHtml(name)} · ${escapeHtml(({available:'可用',missing:'缺失',partial:'部分可用',error:'读取失败',stale:'数据较旧'}[s.status]||'待确认'))} · ${escapeHtml(s.as_of || '无数据日')}</span>`).join('');
+  document.getElementById('fusionKpis').innerHTML = [
+    ['市场温度', market.temperature, market.temperature_tag || '-'], ['情绪', market.emotion || '-', market.as_of || '-'], ['资金合力', market.force_index, (market.sources||{}).force_index?.as_of || '-']
+  ].map(x => `<div class="fusion-kpi"><span class="muted">${x[0]}</span><b>${escapeHtml(String(x[1] ?? '-'))}</b><span class="muted">${escapeHtml(String(x[2]))}</span></div>`).join('');
+  const money = d.money_flow || {}, etf = d.etf_activity || {}, sector = d.sector_rotation || {}, concept = d.concept_rotation || {};
+  document.getElementById('fusionTables').innerHTML = [
+    fusionRows('资金流入排行', money.top_in, ['net_yi','net','net_amount','main_net'], money.unit === 'yi' ? '净额(亿)' : '净额'),
+    fusionRows('资金流出排行', money.top_out, ['net_yi','net','net_amount','main_net'], money.unit === 'yi' ? '净额(亿)' : '净额'),
+    fusionRows('交易型基金成交额排行', etf.top_amount, ['amount'], '成交额'),
+    fusionRows('交易型基金主力净额排行', etf.top_main_net, ['main_net'], '主力净额'),
+    fusionRows('交易型基金份额变化排行', etf.share_delta, ['shares_delta'], '份额变化'),
+    fusionRows('行业轮动 Top', sector.top_up, [sector.metric || 'net_yi','net_yi','net'], '净流向'),
+    fusionRows('概念轮动 Top', concept.top_up, ['pct_chg'], '涨跌幅%')
+  ].join('');
+  const chartRows = [...(money.top_in || []).slice(0,6), ...(money.top_out || []).slice(0,6)];
+  const values = chartRows.map(row => Number(fusionValue(row,['net_yi','net','net_amount','main_net'])) || 0);
+  const chartEl = document.getElementById('fusionFlowChart');
+  if(window.echarts && chartRows.length){
+    fusionChart = fusionChart || echarts.init(chartEl);
+    fusionChart.setOption({tooltip:{trigger:'axis',axisPointer:{type:'shadow'}},grid:{left:90,right:18,top:12,bottom:22},xAxis:{type:'value',axisLabel:{color:'#8b949e'}},yAxis:{type:'category',data:chartRows.map(fusionName).reverse(),axisLabel:{color:'#8b949e',width:80,overflow:'truncate'}},series:[{type:'bar',data:values.reverse().map(v=>({value:v,itemStyle:{color:v>=0?'#f85149':'#3fb950'}}))}]},true);
+  }else{ chartEl.innerHTML = '<span class="muted">暂无可绘制的资金流数据</span>'; }
+}
+async function loadResearchFusion(refresh=false){
+  const meta = document.getElementById('fusionMeta'); meta.textContent = '加载本地融合快照…';
+  try{
+    const base = researchQuery('/api/research_fusion');
+    researchFusionData = await get(base + (refresh ? (base.includes('?') ? '&refresh=true' : '?refresh=true') : ''));
+    if(researchFusionData.ok === false) throw new Error(researchFusionData.error || '加载失败');
+    renderResearchFusion();
+  }catch(e){ meta.innerHTML = `<span class="err">加载失败: ${escapeHtml(e.message)}</span>`; }
+}
+
+async function searchDecisionKnowledge(query){
+  const input = document.getElementById('decisionKnowledgeQuery');
+  const q = (query || input?.value || '').trim();
+  const box = document.getElementById('decisionKnowledgeResults');
+  if(!q){ if(box) box.textContent='请输入主题、风险或候选关键词。'; return; }
+  if(input) input.value=q;
+  if(box) box.textContent='检索研究方法...';
+  try{
+    const data = await get('/api/rag_search?q='+encodeURIComponent(q)+'&k=8');
+    const hits = data.hits || [];
+    if(box) box.innerHTML = hits.length ? hits.map(hit => `<div style="padding:8px 0;border-bottom:1px solid var(--border)"><b>${escapeHtml(hit.cat || '方法')}</b> · <span class="muted">来源已关联</span><br>${escapeHtml(hit.text || '').slice(0,280)}</div>`).join('') : '<span class="muted">无匹配方法论；请使用更具体的主题或风险关键词。</span>';
+  }catch(e){ console.error('[research-method-search]',e); if(box) box.innerHTML='<span class="err">暂时无法获取研究依据，请稍后重试</span>'; }
+}
+function suggestDecisionKnowledge(){
+  const chain = document.getElementById('chainStatus')?.textContent || '';
+  const q = /风险|门控|降级/.test(chain) ? '风险管理 仓位 门控' : (/主线|资金/.test(chain) ? '主线 资金流 量价' : '市场状态 仓位管理');
+  searchDecisionKnowledge(q);
+}
+
+async function ragSearch(){
+  const q = (document.getElementById('decisionKnowledgeQuery')?.value || document.getElementById('fusionKeyword')?.value || '').trim();
+  const box = document.getElementById('ragResults');
+  if(!q) return;
+  box.innerHTML = '<span class="muted">检索中…</span>';
+  try{
+    const r = await get('/api/v11/search?q=' + encodeURIComponent(q));
+    box.innerHTML = r.results.map(x =>
+      `<div><b>${escapeHtml(x.cat || '研究方法')}</b> · <span class="muted">匹配依据</span><br>${escapeHtml(x.text)}</div>`).join('') ||
+      '<span class="muted">无结果</span>';
+  }catch(e){ box.innerHTML = `<span class="err">${e.message}</span>`; }
+}
+
+function escapeHtml(s){ return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function uiStatus(s){ return ({available:'可用',missing:'缺失',partial:'部分可用',error:'读取失败',stale:'数据较旧',degraded:'部分可用',unknown:'待确认'}[String(s)]||'待确认'); }
+
+
+async function loadBattleMap(){
+  const box = document.getElementById('battleMap');
+  try{
+    const r = await get(researchQuery('/api/v11/battle'));
+    if(!r.ok){ box.innerHTML = '<span class="err">暂时无法获取作战判断，请稍后重试</span>'; return; }
+    const b = r.battle_map || {};
+     const confidence = Number(b.confidence);
+     const confidenceValid = Number.isFinite(confidence) && confidence >= 0 && confidence <= 1;
+    let html = `<div style="font-size:13px;line-height:1.7">`;
+    html += `<b>情绪 ${escapeHtml(b.emotion_stage)}</b> · 机制 ${escapeHtml(b.regime)} · 宏观 ${escapeHtml(b.macro_veto)} · `;
+    html += `可信度 <b style="color:#f0b429">${confidenceValid ? (confidence*100).toFixed(0)+'%' : '待确认'}</b> · 建议 <b>${confidenceValid && confidence >= 0.65 ? escapeHtml(b.recommended) : '观察'}</b> · `;
+    html += `仓位 <b style="color:#3fb950">${confidenceValid && confidence >= 0.65 ? escapeHtml(b.position_range) : '仅观察'}</b><br>`;
+     if(b.confidence_components) html += `<div class="muted">判断依据：基础判断 ${escapeHtml(b.confidence_components.base)} · 数据影响 ${escapeHtml(b.confidence_components.degraded_sources || 0)}</div>`;
+    html += `<div style="color:var(--blue);margin-top:6px">竞价锚点 (9:25)</div>`;
+    b.bid_watch.forEach((x,i)=>{ html += `<div>${i+1}. ${escapeHtml(x.item)} → ${escapeHtml(x.signal)} → <b>${escapeHtml(x.action)}</b></div>`; });
+    html += `<div style="color:var(--blue);margin-top:6px">攻击方向</div>`;
+    b.attack_groups.core.forEach(g=>{ const ld = g.leader?`｜龙头:${escapeHtml(g.leader.name)}(${escapeHtml(g.leader.boards)}板)`:' '; html += `<div>🔴 ${escapeHtml(g.name)} (共振${escapeHtml(g.score)}) ${ld}</div>`; });
+    html += `<div style="color:var(--blue);margin-top:6px">风险提示</div>`;
+    if(b.risk_watch.length){ b.risk_watch.forEach(x=>{ html += `<div>⚠️ ${escapeHtml(x.name)}：${escapeHtml(x.risk)} → ${escapeHtml(x.action)}</div>`; }); }
+    else { html += '<div class="muted">无</div>'; }
+    if(b.linkage && b.linkage.length){
+      html += `<div style="color:var(--blue);margin-top:6px">产业链联动</div>`;
+      b.linkage.forEach(x=>{ html += `<div>${escapeHtml(x.from)} → ${escapeHtml(x.to.join('，'))}</div>`; });
+    }
+    if(b.degraded && b.degraded.length){ html += `<div style="color:#f85149;margin-top:6px">⚠️ ${escapeHtml(b.degraded.join('；'))}</div>`; }
+    html += '</div>';
+    box.innerHTML = html;
+  }catch(e){ box.innerHTML = `<span class="err">${e.message}</span>`; }
+}
+
+async function loadIndustryChain(){
+  const box=document.getElementById('industryChainStatus');
+  const chain=(document.getElementById('industryChainName').value||'').trim();
+  try{
+    const params=new URLSearchParams(); if(chain) params.set('chain',chain); if(researchDate) params.set('date',researchDate); params.set('days','60');
+    const data=await get('/api/industry_chain_history?'+params.toString());
+    const rows=Array.isArray(data.rows)?data.rows:[];
+    box.innerHTML=rows.length ? '<div>数据截至 '+escapeHtml(data.as_of||'-')+' · '+rows.length+' 条</div>'+rows.slice(-12).map(row=>'<div class="row"><span>'+escapeHtml(row.chain||'-')+' · '+escapeHtml(row.date||'-')+'</span><span>'+escapeHtml(row.signal||'-')+' · 温度 '+escapeHtml(row.chain_temperature??'-')+'</span></div>').join('') : '<span class="muted">指定日期没有产业链记录，未用其他日期或市场数据替代。</span>';
+  }catch(e){box.textContent='产业链读取失败：'+e.message;}
+}
+
+async function sendFeedback(vote){
+  const box = document.getElementById('fbMsg');
+  const top = document.querySelector('#battleMap b');
+  const direction = top ? top.textContent : '';
+  try{
+    const r = await fetch('/api/v11/feedback', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({date: researchDate || (researchFusionData && researchFusionData.as_of) || new Date().toISOString().slice(0,10), vote: vote, direction: direction})
+    });
+    const j = await r.json();
+    box.textContent = j.ok ? `✅ 已记录: ${vote} ${direction}（权重将在线修正）` : `❌ ${j.error||'失败'}`;
+  }catch(e){ box.textContent = `❌ ${e.message}`; }
+}
+
+document.getElementById('fusionKeyword').addEventListener('input', renderResearchFusion);
+window.addEventListener('resize', () => fusionChart?.resize());
+loadDaily(); loadSources(); loadBattleMap(); loadResearchFusion();
+setInterval(loadDaily, 180000); // 3分钟刷新
+setInterval(loadSources, 180000);
+setInterval(loadBattleMap, 180000);
+setInterval(() => loadResearchFusion(false), 180000);
+</script>
+</body>
+</html>

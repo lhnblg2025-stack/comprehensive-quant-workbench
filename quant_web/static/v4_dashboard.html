@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>组合绩效仪表盘 · 牧云天枢</title>
+  <link rel="stylesheet" href="/styles.css" />
+  <script src="/quant_auth.js"></script>
+  <style>
+    body { margin:0; padding:20px; background:#1a1c23; color:#e5e7eb; font-family:system-ui,sans-serif; display:block; }
+    .container { max-width:1400px; margin:0 auto; }
+    .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+    .header h1 { font-size:22px; color:#e8c547; margin:0; }
+    .header .badge { background:#e8c547; color:#1a1c23; padding:2px 10px; border-radius:4px; font-size:12px; font-weight:600; }
+    .grid-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
+    .grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:20px; }
+    .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px; }
+    .card { background:#24272d; border:1px solid #2d3038; border-radius:8px; padding:14px; }
+    .card h3 { font-size:13px; color:#8b949e; margin:0 0 6px; text-transform:uppercase; letter-spacing:0.5px; }
+    .card .value { font-size:24px; font-weight:700; }
+    .card .sub { font-size:12px; color:#6b7280; margin-top:2px; }
+    .green { color:#22c55e; }
+    .red { color:#ef4444; }
+    .yellow { color:#eab308; }
+    .blue { color:#3b82f6; }
+    .table-wrap { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th { text-align:left; color:#8b949e; font-weight:600; padding:8px 6px; border-bottom:1px solid #2d3038; }
+    td { padding:6px; border-bottom:1px solid #1e2027; }
+    tr:hover td { background:#1e2027; }
+    .badge-regime { display:inline-block; padding:1px 8px; border-radius:4px; font-size:12px; }
+    .regime-bull { background:#065f46; color:#6ee7b7; }
+    .regime-bear { background:#7f1d1d; color:#fca5a5; }
+    .regime-sideways { background:#1e3a5f; color:#93c5fd; }
+    .regime-correction { background:#78350f; color:#fcd34d; }
+    .gauge-bar { height:6px; border-radius:3px; background:#2d3038; margin-top:4px; }
+    .gauge-fill { height:100%; border-radius:3px; transition:width 0.5s; }
+    .tabs { display:flex; gap:4px; margin-bottom:16px; }
+    .tab { padding:8px 16px; border-radius:6px; cursor:pointer; font-size:13px; background:#24272d; border:1px solid #2d3038; }
+    .tab.active { background:#e8c547; color:#1a1c23; border-color:#e8c547; font-weight:600; }
+    .hidden { display:none !important; }
+    .loading { color:#8b949e; font-style:italic; font-size:13px; padding:20px; text-align:center; }
+    .opt-methods { display:flex; gap:6px; margin:10px 0; }
+    .opt-btn { padding:6px 14px; border-radius:4px; cursor:pointer; font-size:12px; background:#2d3038; border:1px solid #3a3d45; color:#c0c5ce; }
+    .opt-btn.active { background:#2563eb; border-color:#2563eb; color:white; }
+    .metrics-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:8px; margin-top:10px; }
+    .metric-item { background:#1e2027; border-radius:4px; padding:8px; text-align:center; }
+    .metric-item .label { font-size:11px; color:#6b7280; }
+    .metric-item .val { font-size:16px; font-weight:600; margin-top:2px; }
+  </style>
+</head>
+<body>
+  <div class="container" id="app">
+    <div class="header">
+      <h1>📊 组合量化仪表盘 <span class="badge">组合优化 · 风控 · 绩效</span></h1>
+      <div>
+        <span class="badge-regime" id="regimeBadge">加载中...</span>
+        <span style="margin-left:8px;font-size:12px;color:#6b7280;" id="updateTime"></span>
+      </div>
+    </div>
+
+    <!-- 卡片: 概要 -->
+    <div class="grid-4" id="summaryCards">
+      <div class="card"><h3>组合收益</h3><div class="value" id="totalReturn">--</div><div class="sub">累计盈亏</div></div>
+      <div class="card"><h3>持仓</h3><div class="value" id="positionCount">--</div><div class="sub">当前持仓数</div></div>
+      <div class="card"><h3>最大回撤</h3><div class="value" id="maxDrawdown">--</div><div class="sub">近一年</div></div>
+      <div class="card"><h3>夏普比</h3><div class="value" id="sharpeRatio">--</div><div class="sub">年化</div></div>
+    </div>
+
+    <!-- 标签导航 -->
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('positions')">📋 持仓</div>
+      <div class="tab" onclick="switchTab('optimizer')">🎯 组合优化</div>
+      <div class="tab" onclick="switchTab('risk')">🛡️ 风控</div>
+      <div class="tab" onclick="switchTab('performance')">📈 绩效</div>
+      <div class="tab" onclick="switchTab('orders')">📜 订单</div>
+      <div class="tab" onclick="switchTab('regime')">🌤️ 市场状态</div>
+    </div>
+
+    <!-- Tab: 持仓 -->
+    <div id="tab-positions" class="tab-content">
+      <div class="card">
+        <h3>当前持仓</h3>
+        <div class="table-wrap"><table><thead><tr>
+          <th>代码</th><th>名称</th><th>持仓</th><th>成本</th><th>现价</th><th>盈亏</th><th>占比</th>
+        </tr></thead><tbody id="positionsBody">
+          <tr><td colspan="7" class="loading">加载中...</td></tr>
+        </tbody></table></div>
+      </div>
+    </div>
+
+    <!-- Tab: 组合优化 -->
+    <div id="tab-optimizer" class="tab-content hidden">
+      <div class="card">
+        <h3>组合优化</h3>
+        <div class="opt-methods">
+          <div class="opt-btn active" onclick="runOptimize('max_sharpe')">📈 高风险收益比</div>
+          <div class="opt-btn" onclick="runOptimize('min_vol')">📉 低波动</div>
+          <div class="opt-btn" onclick="runOptimize('risk_parity')">⚖️ 风险均衡</div>
+          <div class="opt-btn" onclick="runOptimize('hrp')">🌲 分层风险配置</div>
+          <div class="opt-btn" onclick="runOptimize('equal_weight')">🔹 等权</div>
+        </div>
+        <div id="optimizeResult" class="loading">点击上方按钮运行优化</div>
+      </div>
+    </div>
+
+    <!-- Tab: 风控 -->
+    <div id="tab-risk" class="tab-content hidden">
+      <div class="card">
+        <h3>风控检查</h3>
+        <div id="riskResult" class="loading">加载中...</div>
+      </div>
+    </div>
+
+    <!-- Tab: 绩效 -->
+    <div id="tab-performance" class="tab-content hidden">
+      <div class="card">
+        <h3>绩效指标</h3>
+        <div id="perfResult" class="loading">加载中...</div>
+      </div>
+      <div class="card" style="margin-top:12px;">
+        <h3>因子归因</h3>
+        <div id="factorAttribution" class="loading">加载中...</div>
+      </div>
+    </div>
+
+    <!-- Tab: 订单 -->
+    <div id="tab-orders" class="tab-content hidden">
+      <div class="card">
+        <h3>交易记录 (近30天)</h3>
+        <div class="table-wrap"><table><thead><tr>
+          <th>日期</th><th>代码</th><th>类型</th><th>数量</th><th>价格</th><th>备注</th>
+        </tr></thead><tbody id="ordersBody">
+          <tr><td colspan="6" class="loading">加载中...</td></tr>
+        </tbody></table></div>
+      </div>
+    </div>
+
+    <!-- Tab: 市场状态 -->
+    <div id="tab-regime" class="tab-content hidden">
+      <div class="grid-3">
+        <div class="card"><h3>趋势状态</h3><div class="value" id="regTrend">--</div></div>
+        <div class="card"><h3>波动状态</h3><div class="value" id="regVol">--</div></div>
+        <div class="card"><h3>情绪状态</h3><div class="value" id="regSentiment">--</div></div>
+      </div>
+      <div class="card">
+        <h3>综合风险水平</h3>
+        <div id="regRiskBar"><div class="gauge-bar"><div class="gauge-fill" id="riskGaugeFill" style="width:50%;background:#22c55e;"></div></div></div>
+        <div style="font-size:12px;margin-top:4px;" id="regRiskLabel">评估中...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  // ── Tab切换 ──
+  function switchTab(name) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+    document.querySelector(`.tab[onclick="switchTab('${name}')"]`).classList.add('active');
+    document.getElementById(`tab-${name}`).classList.remove('hidden');
+    if (name === 'risk' && document.getElementById('riskResult').innerHTML === '加载中...') loadRisk();
+    if (name === 'performance') loadPerformance();
+    if (name === 'regime') loadRegime();
+  }
+
+  // ── 获取数据 ──
+  async function api(path) {
+    try {
+      const r = await fetch(path);
+      const j = await r.json();
+      return j.ok ? j.data ?? j : j;
+    } catch(e) { return {error: e.message}; }
+  }
+
+  // ── 加载概要 ──
+  async function loadSummary() {
+    // 持仓
+    const pos = await api('/api/paper/positions');
+    if (pos && pos.positions) {
+      document.getElementById('positionCount').textContent = pos.positions.length;
+      const totalPnl = pos.summary?.total_pnl_pct;
+      if (totalPnl == null) { document.getElementById('totalReturn').textContent = '待确认'; }
+      if (totalPnl != null) {
+        document.getElementById('totalReturn').textContent = totalPnl.toFixed(1) + '%';
+        document.getElementById('totalReturn').className = 'value ' + (totalPnl >= 0 ? 'green' : 'red');
+      }
+
+      // 持仓表格
+      const tbody = document.getElementById('positionsBody');
+      tbody.innerHTML = '';
+      for (const p of pos.positions) {
+        const pnl = p.pnl_pct;
+        const pct = pos.summary?.total_cost > 0 ? (p.total_cost / pos.summary.total_cost * 100).toFixed(1) : '0';
+        tbody.innerHTML += `<tr>
+          <td>${p.symbol}</td><td>${p.name}</td>
+          <td>${p.shares}</td><td>¥${p.cost_price?.toFixed(2) ?? '--'}</td>
+          <td>¥${p.current_price?.toFixed(2) ?? '--'}</td>
+          <td class="${pnl == null ? '' : pnl >= 0 ? 'green' : 'red'}">${pnl == null ? '待确认' : (pnl >= 0 ? '+' : '') + pnl.toFixed(2) + '%'}</td>
+          <td>${pct}%</td>
+        </tr>`;
+      }
+    }
+
+    // 夏普比/回撤（组合绩效服务）
+    const perf = await api('/api/v4/performance/summary');
+    if (perf && !perf.error) {
+      document.getElementById('maxDrawdown').textContent = perf.max_drawdown_pct == null ? '待确认' : perf.max_drawdown_pct.toFixed(1) + '%';
+      document.getElementById('maxDrawdown').className = 'value red';
+      document.getElementById('sharpeRatio').textContent = perf.sharpe_ratio == null ? '待确认' : perf.sharpe_ratio.toFixed(2);
+    }
+  }
+
+  // ── 组合优化 ──
+  async function runOptimize(method) {
+    document.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById('optimizeResult').innerHTML = '<div class="loading">计算中...</div>';
+    const r = await api(`/api/v4/portfolio/optimize?method=${method}`);
+    if (r.error) { document.getElementById('optimizeResult').innerHTML = `❌ ${r.error}`; return; }
+    if (r.synthetic === true || r.is_placeholder === true) { document.getElementById('optimizeResult').innerHTML = '<div class="warning">优化结果不可执行：当前返回的是合成/占位数据，仅可用于界面联调。</div>'; return; }
+    let html = `<div class="metrics-grid">`;
+    html += `<div class="metric-item"><div class="label">预期年化收益</div><div class="val green">${(r.expected_return*100).toFixed(1)}%</div></div>`;
+    html += `<div class="metric-item"><div class="label">年化波动率</div><div class="val">${(r.expected_vol*100).toFixed(1)}%</div></div>`;
+    html += `<div class="metric-item"><div class="label">夏普比</div><div class="val blue">${r.sharpe_ratio.toFixed(2)}</div></div>`;
+    html += `<div class="metric-item"><div class="label">分散度</div><div class="val">${r.diversification_ratio.toFixed(2)}x</div></div>`;
+    html += `<div class="metric-item"><div class="label">有效持仓</div><div class="val">${r.effective_n.toFixed(0)}</div></div>`;
+    html += `</div>`;
+    html += `<table style="margin-top:10px;"><thead><tr><th>股票</th><th>权重</th></tr></thead><tbody>`;
+    for (const [sym, w] of Object.entries(r.weights || {}).sort((a,b)=>b[1]-a[1]).slice(0,10)) {
+      html += `<tr><td>${sym}</td><td>${(w*100).toFixed(1)}%</td></tr>`;
+    }
+    html += `</tbody></table>`;
+    document.getElementById('optimizeResult').innerHTML = html;
+  }
+
+  // ── 风控 ──
+  async function loadRisk() {
+    const r = await api('/api/v4/risk/check');
+    if (r.error) { document.getElementById('riskResult').innerHTML = `❌ ${r.error}`; return; }
+    let html = `<div class="metrics-grid">`;
+    html += `<div class="metric-item"><div class="label">持仓</div><div class="val">${r.positions ?? 0}</div></div>`;
+    html += `<div class="metric-item"><div class="label">总盈亏</div><div class="val ${(r.total_pnl_pct??0)>=0?'green':'red'}">${(r.total_pnl_pct??0).toFixed(1)}%</div></div>`;
+    html += `<div class="metric-item"><div class="label">个股预警</div><div class="val">${(r.alerts||[]).length}</div></div>`;
+    html += `<div class="metric-item"><div class="label">组合预警</div><div class="val">${(r.portfolio_alerts||[]).length}</div></div>`;
+    html += `</div>`;
+    if (r.portfolio_alerts?.length) {
+      html += `<h4 style="margin:10px 0 6px;font-size:13px;">组合预警:</h4>`;
+      for (const a of r.portfolio_alerts) html += `<div style="font-size:12px;color:#eab308;">⚠️ ${a.message}</div>`;
+    }
+    if (r.alerts?.length) {
+      html += `<h4 style="margin:10px 0 6px;font-size:13px;">个股预警:</h4>`;
+      for (const a of r.alerts) html += `<div style="font-size:12px;color:#ef4444;">${a.message}</div>`;
+    }
+    document.getElementById('riskResult').innerHTML = html;
+  }
+
+  // ── 绩效 ──
+  async function loadPerformance() {
+    const r = await api('/api/v4/performance/summary');
+    if (r.error) { document.getElementById('perfResult').innerHTML = `❌ ${r.error}`; return; }
+    let html = `<div class="metrics-grid">`;
+    const metrics = [
+      ['年化收益', 'annual_return', 'green', '%'],
+      ['年化波动', 'annual_vol', '', '%'],
+      ['夏普比', 'sharpe_ratio', 'blue', ''],
+      ['索提诺比', 'sortino_ratio', 'blue', ''],
+      ['卡尔玛比', 'calmar_ratio', 'blue', ''],
+      ['最大回撤', 'max_drawdown_pct', 'red', '%'],
+      ['日胜率', 'win_rate', 'green', '%'],
+      ['偏度', 'skew', '', ''],
+      ['95%情景损失', 'var_95', 'red', '%'],
+    ];
+    for (const [label, key, cls, unit] of metrics) {
+      const v = r[key];
+      if (v !== undefined && v !== null) {
+        html += `<div class="metric-item"><div class="label">${label}</div><div class="val ${cls}">${typeof v === 'number' ? v.toFixed(2) + unit : v}</div></div>`;
+      }
+    }
+    html += `</div>`;
+    document.getElementById('perfResult').innerHTML = html;
+
+    // 因子归因
+    const fa = await api('/api/v4/performance/factor_attribution');
+    if (fa && !fa.error) {
+      let faHtml = `<div class="metrics-grid">`;
+      for (const [factor, contrib] of Object.entries(fa)) {
+        faHtml += `<div class="metric-item"><div class="label">${factor}</div><div class="val">${typeof contrib === 'number' ? contrib.toFixed(4) : contrib}</div></div>`;
+      }
+      faHtml += `</div>`;
+      document.getElementById('factorAttribution').innerHTML = faHtml;
+    }
+  }
+
+  // ── 订单 ──
+  async function loadOrders() {
+    const r = await api('/api/paper/trades?limit=30');
+    if (r && r.trades) {
+      const tbody = document.getElementById('ordersBody');
+      tbody.innerHTML = '';
+      for (const t of r.trades) {
+        const color = t.trade_type === 'buy' ? 'green' : 'red';
+        tbody.innerHTML += `<tr>
+          <td>${t.trade_date}</td><td>${t.symbol}</td>
+          <td class="${color}">${t.trade_type === 'buy' ? '买入' : '卖出'}</td>
+          <td>${t.shares}</td><td>¥${t.price?.toFixed(2)}</td>
+          <td style="font-size:11px;color:#6b7280;">${(t.notes||'').slice(0,30)}</td>
+        </tr>`;
+      }
+    }
+  }
+
+  // ── 市场状态 ──
+  async function loadRegime() {
+    const r = await api('/api/v4/regime');
+    if (r.error) return;
+    const trend = r.trend || 'sideways';
+    document.getElementById('regTrend').textContent = trend;
+    document.getElementById('regTrend').className = 'value';
+    document.getElementById('regVol').textContent = r.volatility || 'normal';
+    document.getElementById('regSentiment').textContent = r.sentiment || 'normal';
+
+    const riskLvl = r.composite_risk_level;
+    if (riskLvl == null) { document.getElementById('riskGaugeFill').style.width = '0%'; document.getElementById('regRiskLabel').textContent = '风险不可用：缺少有效组合数据'; return; }
+    let color = '#22c55e';
+    if (riskLvl > 7) color = '#ef4444';
+    else if (riskLvl > 4) color = '#eab308';
+    document.getElementById('riskGaugeFill').style.width = (riskLvl * 10) + '%';
+    document.getElementById('riskGaugeFill').style.background = color;
+    document.getElementById('regRiskLabel').textContent =
+      riskLvl <= 3 ? '🟢 低风险' : riskLvl <= 6 ? '🟡 中等风险' : '🔴 高风险';
+
+    document.getElementById('regimeBadge').textContent =
+      r.text || `趋势: ${trend} · 风险: ${riskLvl}/10`;
+    const cls = trend === 'bull' ? 'regime-bull' :
+                trend === 'bear' ? 'regime-bear' : 'regime-sideways';
+    document.getElementById('regimeBadge').className = `badge-regime ${cls}`;
+  }
+
+  // ── 初始化 ──
+  document.getElementById('updateTime').textContent = new Date().toLocaleString('zh-CN');
+  loadSummary();
+  loadOrders();
+  loadRegime();
+  setInterval(loadRegime, 60000);
+  setInterval(loadSummary, 30000);
+  </script>
+</body>
+</html>

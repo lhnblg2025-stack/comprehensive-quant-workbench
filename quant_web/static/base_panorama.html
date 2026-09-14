@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🗃️ 数据基座全景</title>
+<style>
+:root{--bg:#0a0e17;--card:#131a26;--line:#232e42;--tx:#e8edf4;--sub:#8ea0b8;--red:#f23645;--grn:#00b368;--amber:#f0b429;--blue:#4aa3ff}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tx);font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;padding:20px;max-width:1200px;margin:0 auto}
+h1{font-size:20px;margin-bottom:4px}.meta{color:var(--sub);font-size:13px;margin-bottom:16px}
+.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px}
+.sbox{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;text-align:center}
+.sbox .v{font-size:24px;font-weight:800}
+.sbox .l{color:var(--sub);font-size:12px}
+table{width:100%;border-collapse:collapse;font-size:13px;background:var(--card);border-radius:10px;overflow:hidden}
+th,td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--line)}
+th{color:var(--sub);font-weight:500;background:#182334}
+tr:last-child td{border-bottom:none}
+.tag{padding:1px 9px;border-radius:10px;font-size:11px;color:#fff}
+.t-fresh{background:#1f3d2f;color:var(--grn);border:1px solid var(--grn)}
+.t-stale{background:#3d3020;color:var(--amber);border:1px solid var(--amber)}
+.t-expired{background:#3d1f1f;color:var(--red);border:1px solid var(--red)}
+.num{font-variant-numeric:tabular-nums;text-align:right}
+.sample{color:var(--sub);font-size:11px;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.refresh{position:fixed;right:16px;bottom:16px;background:var(--card);border:1px solid var(--line);color:var(--tx);border-radius:20px;padding:8px 14px;font-size:12px;cursor:pointer}
+</style>
+<link rel="stylesheet" href="/standalone-theme.css?build=20260827"></head>
+<body>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;font-size:12px"><a href="/" style="color:var(--blue);text-decoration:none">⌂ 主页面</a><a href="/research_dashboard.html" style="color:var(--sub);text-decoration:none">研究</a><a href="/review.html" style="color:var(--sub);text-decoration:none">复盘</a><a href="/knowledge_base.html" style="color:var(--sub);text-decoration:none">方法论</a></div>
+<h1>🗃️ 数据基座全景</h1>
+<div class="meta" id="meta">加载中…</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"><input id="filter" placeholder="筛选基座/样例/状态" style="background:#161b22;border:1px solid var(--line);color:var(--tx);border-radius:6px;padding:7px 9px;min-width:240px"><button class="refresh" style="position:static" onclick="filterRows('stale')">仅异常</button><button class="refresh" style="position:static" onclick="filterRows('all')">全部</button></div>
+<div class="summary" id="summary"></div>
+<div style="overflow-x:auto"><table id="tbl">
+<thead><tr><th>基座</th><th>周期</th><th>最新日期</th><th>滞后</th><th class="num">文件数</th><th>评级</th><th>样例</th></tr></thead>
+<tbody id="tbody"></tbody></table></div>
+<h2 style="font-size:16px;margin:22px 0 8px">短线决策数据源</h2>
+<div class="meta" style="margin-bottom:8px">这里显示数据是否真的进入决策链，不用技术地址代替状态。</div>
+<div style="overflow-x:auto"><table id="contractTbl"><thead><tr><th>数据源</th><th>状态</th><th>实际数据日</th><th>说明</th></tr></thead><tbody id="contractBody"></tbody></table></div>
+<div class="refresh" onclick="load()">🔄 刷新</div>
+<script src="/quant_auth.js"></script><script>
+let loadingTimer = null, computingAttempts = 0, lastGood = null, filterMode = 'all';
+function filterRows(mode){ filterMode=mode||'all'; if(lastGood) render(lastGood); }
+document.getElementById('filter').addEventListener('input',()=>{ if(lastGood) render(lastGood); });
+async function load(force=false){
+  try{
+    const d = await window.quantApiJson('/api/basepanorama' + (force ? '?refresh=true' : ''));
+    if(d.status === 'computing'){
+      computingAttempts += 1;
+      if(computingAttempts > 12){
+        document.getElementById('meta').textContent = `⚠️ 扫描超过30秒仍未完成；${lastGood ? '保留最近成功快照，可手动刷新。' : '暂未得到成功快照，请手动刷新。'}`;
+        return;
+      }
+      document.getElementById('meta').textContent = `⏳ 数据基座扫描中（${computingAttempts}/12），完成后自动刷新…`;
+      if(!loadingTimer) loadingTimer = setTimeout(()=>{ loadingTimer=null; load(); }, 2500);
+      return;
+    }
+    computingAttempts = 0;
+    const x = window.quantApiData(d); lastGood = x;
+    render(x);
+  }catch(e){ document.getElementById('meta').textContent='❌ '+e.message+(lastGood?'；保留最近成功快照。':''); }
+}
+function render(x){
+  x = (x && typeof x === 'object') ? x : {};
+  const dirs = Array.isArray(x.dirs) ? x.dirs : [];
+  const contracts = Array.isArray(x.contracts) ? x.contracts : [];
+  const contractNames = {kline:'个股日线',valuation:'估值数据',financial:'财务季报',market:'市场数据',quarterly:'季度持仓',macro:'宏观数据',events:'事件数据',hot_rank:'市场热度',social:'市场舆情',classification:'题材分类',fund_flow:'个股资金流',lhb_hist:'龙虎榜',zt_history:'涨停池',realtime_snapshot:'盘中快照',feature_store:'因子特征',predictions:'预测验证'};
+  const contractBody = document.getElementById('contractBody');
+  if (contractBody) {
+    const statusName = {fresh:'新鲜',stale:'较旧',expired:'过期',available:'可用',missing:'缺失',error:'失败'};
+    contractBody.innerHTML = contracts.map(c => `<tr><td><b>${contractNames[c.id] || c.id}</b></td><td><span class="tag ${c.fresh?'t-fresh':'t-stale'}">${c.exists && c.fresh ? '✅ 可用于决策' : (c.exists ? '⚠️ 需要复核' : '❌ 缺失')}</span></td><td>${c.as_of || '暂无'}</td><td class="sample">${c.detail || '未提供说明'}</td></tr>`).join('') || '<tr><td colspan="4">暂无数据源状态</td></tr>';
+  }
+  const query = document.getElementById('filter').value.trim().toLowerCase();
+  const shown = dirs.filter(d => { const text = `${d.name||''} ${d.sample||''} ${d.level||''}`.toLowerCase(); return (filterMode !== 'stale' || d.level !== 'fresh') && (!query || text.includes(query)); });
+  document.getElementById('meta').textContent = `共 ${Number(x.total)||dirs.length} 个数据项 · ${dirs.filter(d=>d && d.level==='fresh').length} 新鲜 / ${dirs.filter(d=>d && d.level==='stale').length} 数据较旧 / ${dirs.filter(d=>d && d.level==='expired').length} 已过期 · 当前显示 ${shown.length}`;
+  const cls = {fresh:'t-fresh',stale:'t-stale',expired:'t-expired'};
+  document.getElementById('tbody').innerHTML = shown.map(d=>`
+    <tr><td><b>${d.name}</b></td><td>${d.cycle||'-'}</td><td>${d.latest||'-'}</td>
+    <td class="num">${d.lag>=0?d.lag+'天':'-'}</td><td class="num">${d.files}</td>
+    <td><span class="tag ${cls[d.level]||''}">${d.level==='fresh'?'✅ 新鲜':(d.level==='stale'?'⚠️ 滞后':'❌ 过期')}</span></td>
+    <td class="sample" title="${d.sample||''}">${d.sample||'-'}</td></tr>`).join('');
+  document.getElementById('summary').innerHTML = `
+    <div class="sbox"><div class="v" style="color:var(--grn)">${dirs.filter(d=>d && d.level==='fresh').length}</div><div class="l">新鲜</div></div>
+    <div class="sbox"><div class="v" style="color:var(--amber)">${dirs.filter(d=>d && d.level==='stale').length}</div><div class="l">滞后</div></div>
+    <div class="sbox"><div class="v" style="color:var(--red)">${dirs.filter(d=>d && d.level==='expired').length}</div><div class="l">过期</div></div>`;
+}
+load(); setInterval(load, 60000);
+</script>
+</body></html>

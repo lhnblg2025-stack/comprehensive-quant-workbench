@@ -1,0 +1,1321 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>综合量化研究平台 · 牧云天枢</title>
+  <!-- Quant Terminal 单一启动链：基础库 -> 主编排器 -->
+  <script src="/sse-client.js"></script>
+  <link rel="stylesheet" href="/styles.css?build=20260831-governance" />
+  <script src="/echarts.min.js"></script>
+  <script src="/plotly.min.js"></script>
+  <script src="/task-dashboard.js"></script>
+  <!-- 保留 V5 的全局错误兜底、心跳、快捷键与可见性体验。 -->
+  <script src="/v5-init.js"></script>
+  <script src="/viz9.js"></script>
+  <script src="/quant_auth.js"></script>
+  <script src="/ui9.js"></script>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="brand"><span class="brand-copy"><span class="brand-name">牧云天枢</span><span class="brand-sub">综合量化研究平台</span></span></div>
+
+  <!-- 总览（单页） -->
+  <button class="nav active" data-view="dashboard">📊 总览</button>
+
+  <!-- 个股分析（大类→小类） -->
+  <div class="nav-group">
+    <div class="nav-group-title" data-group="stock">🔍 个股分析 <span class="ng-arrow">▸</span></div>
+    <div class="nav-group-items" id="grp-stock">
+      <button class="nav-sub" data-view="stock" data-sub="s-overview">决策台</button>
+      <button class="nav-sub" data-view="stock" data-sub="s-kline">K线</button>
+      <button class="nav-sub" data-view="stock" data-sub="s-panorama">个股全景</button>
+      <button class="nav-sub" data-view="stock" data-sub="s-factors">多因子扫描</button>
+      <button class="nav-sub" data-view="stock" data-sub="s-ml">模型信号</button>
+      <button class="nav-sub" data-view="stock" data-sub="s-fundamental">基本面</button>
+      <button class="nav-sub" data-view="stock" data-sub="s-patterns">K线形态</button>
+      <button class="nav-sub" data-view="stock" data-sub="s-intraday">日内K线</button>
+      <button class="nav-sub" data-view="stock" data-sub="s-ai">AI分析</button>
+    </div>
+  </div>
+
+  <!-- 因子工坊（新） -->
+  <div class="nav-group">
+    <div class="nav-group-title" data-group="factors">🧪 因子工坊 <span class="ng-arrow">▸</span></div>
+    <div class="nav-group-items" id="grp-factors">
+      <button class="nav-sub" data-view="factors" data-sub="f-overview">决策总览</button>
+      <button class="nav-sub" data-view="factors" data-sub="f-scan">个股扫描</button>
+      <button class="nav-sub" data-view="factors" data-sub="f-ic">信息系数分析</button>
+      <button class="nav-sub" data-view="factors" data-sub="f-combine">因子组合评估</button>
+      <button class="nav-sub" data-view="factors" data-sub="f-library">因子库</button>
+    </div>
+  </div>
+
+  <!-- 策略 -->
+  <div class="nav-group">
+    <div class="nav-group-title" data-group="strategy">📈 策略 <span class="ng-arrow">▸</span></div>
+    <div class="nav-group-items" id="grp-strategy">
+      <button class="nav-sub" data-view="strategy" data-sub="st-scan">扫描</button>
+      <button class="nav-sub" data-view="strategy" data-sub="st-backtest">回测</button>
+      <button class="nav-sub" data-view="strategy" data-sub="st-optimize">优化</button>
+      <button class="nav-sub" data-view="strategy" data-sub="st-dashboard">回测看板</button>
+      <button class="nav-sub" data-view="strategy" data-sub="st-compare">策略对比</button>
+      <button class="nav-sub" data-view="strategy" data-sub="st-event-backtest">事件回测</button>
+      <button class="nav-sub" data-view="strategy" data-sub="st-skills">技能</button>
+    </div>
+  </div>
+
+  <!-- 市场数据 -->
+  <div class="nav-group">
+    <div class="nav-group-title" data-group="market">🌐 市场数据 <span class="ng-arrow">▸</span></div>
+    <div class="nav-group-items" id="grp-market">
+      <button class="nav-sub" data-view="market" data-sub="m-sector">板块</button>
+      <button class="nav-sub" data-view="market" data-sub="m-flow">资金结构</button>
+      <button class="nav-sub" data-view="market" data-sub="m-temp">温度</button>
+      <button class="nav-sub" data-view="market" data-sub="m-regime">状态</button>
+      <button class="nav-sub" data-view="market" data-sub="m-margin">两融</button>
+      <button class="nav-sub" data-view="market" data-sub="m-north">沪深港通</button>
+      <button class="nav-sub" data-view="market" data-sub="m-sentiment">市场舆情</button>
+      <button class="nav-sub" data-view="market" data-sub="m-global">全球</button>
+      <button class="nav-sub" data-view="market" data-sub="m-calendar">日历</button>
+      <button class="nav-sub" data-view="market" data-sub="m-attribution">归因</button>
+      <button class="nav-sub" data-view="market" data-sub="m-history">历史数据中心</button>
+      <button class="nav-sub" data-view="market" data-sub="m-etf">ETF份额与资金</button>
+    </div>
+  </div>
+
+  <!-- 风控 -->
+  <div class="nav-group">
+    <div class="nav-group-title" data-group="risk">🛡️ 风控 <span class="ng-arrow">▸</span></div>
+    <div class="nav-group-items" id="grp-risk">
+      <button class="nav-sub" data-view="risk" data-sub="r-portfolio">持仓</button>
+      <button class="nav-sub" data-view="risk" data-sub="r-risk">风险</button>
+      <button class="nav-sub" data-view="risk" data-sub="r-factor">因子</button>
+      <button class="nav-sub" data-view="risk" data-sub="r-financial">财务</button>
+      <button class="nav-sub" data-view="risk" data-sub="r-fama">横截面回归</button>
+      <button class="nav-sub" data-view="risk" data-sub="r-opportunity">机会</button>
+      <button class="nav-sub" data-view="risk" data-sub="r-news">舆情</button>
+      <button class="nav-sub" data-view="risk" data-sub="r-optimizer">组合优化</button>
+      <button class="nav-sub" data-view="risk" data-sub="r-allocation">资产配置</button>
+    </div>
+  </div>
+
+  <!-- 模拟盘 -->
+  <a class="sidebar-quick-link" href="/strategy_lab.html">🧪 策略实验室 · 自写策略/回测</a>
+  <a class="sidebar-quick-link" href="/backtest_console.html">📈 因子回测 · 策略筛选</a>
+  <a class="sidebar-quick-link" href="/paper_trading.html">📊 纸面账户 · 订单</a>
+
+  <!-- 行情交易员 -->
+  <a class="sidebar-quick-link" href="/trader.html">📈 行情 · 交易员</a>
+
+  <!-- 统一入口与深度独立页并存；重构不能移除已经验证的直达工作流。 -->
+  <button class="sidebar-quick-link" type="button" onclick="window.quickViewIntegrated('risk','r-portfolio')">🧮 组合 · 风控 · 优化</button>
+  <a class="sidebar-quick-link" href="/v4.html">📊 组合绩效深度页</a>
+  <a class="sidebar-quick-link" href="/v4_dashboard.html">🧮 组合绩效看板</a>
+  <a class="sidebar-quick-link" href="/intraday.html">📡 盘中监控 · 独立页</a>
+  <a class="sidebar-quick-link" href="/review.html">📊 每日复盘 · 独立页</a>
+  <a class="sidebar-quick-link" href="/base_panorama.html">🗃️ 数据基座全景</a>
+  <a class="sidebar-quick-link" href="/report.html">📄 研报归档</a>
+  <a class="sidebar-quick-link" href="/research_report.html">📑 统一深度研报</a>
+  <a class="sidebar-quick-link" href="/market_weekly.html">🗓️ 全市场周报</a>
+  <a class="sidebar-quick-link" href="/research_images.html">🖼️ 研报图像证据</a>
+  <a class="sidebar-quick-link" href="/research_dashboard.html">🧠 深度投研看板</a>
+  <a class="sidebar-quick-link" href="/knowledge_base.html" target="_blank" rel="noopener">📚 量化知识库 · 287技能</a>
+
+  <!-- 监控与系统 -->
+  <div class="nav-group">
+    <div class="nav-group-title" data-group="ops">📡 监控与系统 <span class="ng-arrow">▸</span></div>
+    <div class="nav-group-items" id="grp-ops">
+      <button class="nav-sub" data-view="ops" data-sub="o-realtime">实时监控</button>
+      <button class="nav-sub" data-view="ops" data-sub="o-reports">报告</button>
+      <button class="nav-sub" data-view="ops" data-sub="o-ml-monitor">模型运行情况</button>
+      <button class="nav-sub" data-view="ops" data-sub="o-drift">漂移</button>
+      <button class="nav-sub" data-view="ops" data-sub="o-cache">缓存</button>
+      <button class="nav-sub" data-view="ops" data-sub="o-databass">📦 数据基座</button>
+      <button class="nav-sub" data-view="ops" data-sub="o-featurestore">特征库</button>
+      <button class="nav-sub" data-view="ops" data-sub="o-tasks">处理任务</button>
+      <button class="nav-sub" data-view="ops" data-sub="o-alerts">🔔 告警中心</button>
+      <button class="nav-sub" data-view="ops" data-sub="o-chain">🧭 决策链+RAG</button>
+      <button class="nav-sub" data-view="ops" data-sub="o-datahealth">🩺 数据健康</button>
+      <button class="nav-sub" data-view="ops" data-sub="o-cron">⏰ 定时任务</button>
+      <button class="nav-sub" data-view="ops" data-sub="o-chat">AI对话</button>
+    </div>
+  </div>
+
+  <button class="nav" data-view="slip">🛞 滑点对比</button>
+
+  <div class="sidebar-sep"></div>
+  <div class="sidebar-toggle" onclick="toggleSidebar('strategyPanel')">📐 策略参数 <span id="spArrow">▸</span></div>
+  <div id="strategyPanel" class="sidebar-collapse">
+    <label>快线MA <input id="sp_fast_ma" type="number" value="20" min="5" max="100" /></label>
+    <label>慢线MA <input id="sp_slow_ma" type="number" value="60" min="10" max="200" /></label>
+    <label>趋势MA <input id="sp_trend_ma" type="number" value="144" min="20" max="500" /></label>
+    <label>长期MA <input id="sp_long_trend_ma" type="number" value="300" min="50" max="999" /></label>
+    <label>量MA <input id="sp_volume_ma" type="number" value="20" min="5" max="100" /></label>
+    <label>止损% <input id="sp_stop_loss_pct" type="number" step="0.5" value="8" min="1" max="30" /></label>
+    <label>止盈% <input id="sp_take_profit_pct" type="number" step="1" value="24" min="3" max="100" /></label>
+    <label>跟踪止损% <input id="sp_trail_stop_pct" type="number" step="1" value="12" min="2" max="50" /></label>
+    <label>风险上限 <input id="sp_max_risk_score" type="number" value="5" min="1" max="10" /></label>
+    <hr/>
+    <label>起始资金(万) <input id="sp_initial_cash" type="number" step="10" value="100" min="1" /></label>
+    <label>单票仓位% <input id="sp_max_position_pct" type="number" step="5" value="20" min="5" max="100" /></label>
+    <label>单笔风险% <input id="sp_risk_per_trade_pct" type="number" step="0.5" value="1" min="0.1" max="10" /></label>
+    <label>佣金%% <input id="sp_commission_pct" type="number" step="0.01" value="0.03" min="0" max="1" /></label>
+    <label>滑点%% <input id="sp_slippage_pct" type="number" step="0.05" value="0.1" min="0" max="1" /></label>
+  </div>
+</aside>
+
+<main class="main">
+  <!-- ════════════════════════ 总览 ════════════════════════ -->
+  <section id="dashboard" class="view active">
+    <header class="topbar">
+      <h1><span class="crumb">工作台</span>🐚 牧云天枢 <span style="font-size:13px;color:#657282;font-weight:400;margin-left:8px;">盘面复盘 · 数据新鲜度 · 因子-回测-风控一体</span></h1>
+      <!-- P0: 全局股票搜索 -->
+      <div class="global-search">
+        <span class="gs-icon">🔍</span>
+        <input id="globalSearchInput" placeholder="搜索股票代码 / 名称，回车跳转…" autocomplete="off" />
+        <div class="search-dropdown" id="globalSearchDropdown"></div>
+      </div>
+      <span id="status">就绪</span>
+    </header>
+    <!-- 市场状态 Hero 条 -->
+    <div id="globalDataStatus" class="global-data-status" role="status" aria-live="polite">正在汇总行情与数据源状态…</div><div class="dash-hero" id="dashHero">
+      <span class="hero-pill live" id="heroMarketStatus"><i class="pulse-dot"></i><span id="heroMarketStatusText">盘中</span></span>
+      <span class="hero-pill risk" id="heroRiskPill" style="display:none;">⚠️ <span id="heroRiskText"></span></span>
+      <div class="hero-sep"></div>
+      <span class="hero-meta">交易日 <b id="heroTradeDate">-</b></span>
+      <span class="hero-meta">全A <b id="heroBreadthPct">-</b></span>
+      <span class="hero-meta">中位数 <b id="heroMedian">-</b></span>
+      <span class="hero-meta">涨停/跌停 <b id="heroLimit">-</b></span>
+      <span class="hero-sep"></span>
+      <span class="hero-title">牧云天枢量化工作台 <small>· 实时行情更新 · 数据新鲜度 · 因子、回测与风控一体</small></span>
+    </div>
+    <!-- 统一决策工作台：首屏只呈现可行动信息，其余能力按需下沉。 -->
+    <section class="workbench-panel" id="decisionWorkbench" aria-labelledby="workbenchTitle">
+      <div class="workbench-heading"><div><h2 id="workbenchTitle">统一决策工作台</h2><span id="workbenchMeta" class="data-meta">正在更新决策摘要…</span></div><div class="workbench-actions"><select id="workbenchMode" aria-label="决策快照模式"><option value="after_close">盘后复盘</option><option value="intraday">盘中状态</option><option value="battle_map">作战地图</option></select><button id="workbenchRefresh" class="btn-sm" title="重新读取统一决策快照">↻ 刷新</button><button id="apiCatalogBtn" class="btn-sm" title="查看数据来源与深入能力">⌘ 数据来源</button></div></div>
+      <div id="workbenchState" class="workbench-state loading">正在读取统一决策快照…</div>
+      <div class="workbench-kpis"><div><span>市场温度</span><b id="workbenchTemperature">-</b></div><div><span>资金合力</span><b id="workbenchForce">-</b></div><div><span>情绪阶段</span><b id="workbenchEmotion">-</b></div><div><span>全A宽度</span><b id="workbenchBreadth">-</b></div><div><span>涨停 / 跌停</span><b id="workbenchLimits">-</b></div><div><span>观察候选</span><b id="workbenchCandidatesCount">-</b></div></div>
+      <section class="workbench-action-queue" aria-labelledby="workbenchActionTitle"><div class="workbench-subhead"><div><h3 id="workbenchActionTitle">今日行动队列</h3><span id="workbenchActionMeta" class="data-meta">根据当前数据状态生成</span></div><span id="workbenchActionSummary" class="workbench-badge neutral">等待快照</span></div><div id="workbenchActionsQueue" class="workbench-actions-grid"><div class="workbench-state loading">正在整理下一步…</div></div></section>
+      <div class="workbench-grid"><div><div class="workbench-subhead"><h3>主线与资金</h3><span class="data-meta">综合观察结构、扩散与资金</span></div><div id="workbenchMainlines"></div></div><div><div class="workbench-subhead"><h3>候选与执行</h3><span id="workbenchCandidateMeta" class="data-meta"></span></div><div id="workbenchCandidates"></div></div><div><div class="workbench-subhead"><h3>风险门控</h3><span class="data-meta">数据不足时会明确提示</span></div><ul id="workbenchRisks" class="workbench-risk-list"></ul></div><div><div class="workbench-subhead"><h3>证据源状态</h3><span class="data-meta">数据日期与更新时间分别展示</span></div><div id="workbenchSources"></div></div><div><div class="workbench-subhead"><h3>置信度分解</h3><span class="data-meta">可信度附带判断依据</span></div><div id="workbenchConfidence" class="data-state">正在形成可信度判断…</div></div><div><div class="workbench-subhead"><h3>生产闭环</h3><span class="data-meta">投递回执与技能执行登记</span></div><div id="workbenchLedger" class="data-state">正在读取执行账本…</div></div></div>
+    </section>
+    <!-- P0: KPI 仪表盘（app.js 动态填充） -->
+    <section class="macro-panel index-ticker-panel" aria-labelledby="indexTickerTitle"><div class="panel-heading"><h2 id="indexTickerTitle">主要指数 · 实时行情</h2><div><span id="indexTickerMeta" class="data-meta">独立行情源加载中</span> <button id="indexTickerRefresh" class="btn-sm" type="button">刷新</button></div></div><div id="indexTicker" class="index-ticker-grid"><div class="data-state loading">正在读取主要指数行情…</div></div><div id="globalIndexTicker" class="global-index-ticker"><span class="data-meta">日韩港美指数随后加载，不阻塞 A 股行情</span></div></section>
+    <div class="kpi-grid" id="kpiGrid"></div>
+    <!-- 市场宽度（涨跌家数结构） -->
+    <div class="macro-panel" id="macroBreadth">
+      <div class="macro-header">📊 市场宽度 · 涨跌结构</div>
+      <div class="breadth-wrap" id="breadthDisplay">
+        <div class="breadth-bar"><div class="b-up" style="flex:0;">-</div><div class="b-flat" style="flex:0;"></div><div class="b-down" style="flex:1;">-</div></div>
+        <div class="breadth-stats">加载中…</div>
+      </div>
+    </div>
+    <section class="macro-panel market-recap-panel" id="marketRecapPanel">
+      <div class="panel-heading"><h2>单页盘面复盘</h2><div><span id="marketRecapMeta" class="data-meta">加载中</span> <button id="marketRecapRefresh" class="btn-sm" type="button">刷新复盘</button></div></div>
+      <div id="marketRecapState" class="data-state loading">正在读取盘后快照…</div>
+      <div id="marketRecapContent" hidden>
+        <div id="marketRecapKpis" class="stock-kpi-row"></div>
+        <div id="marketRecapIndices" class="market-index-strip"></div>
+        <div class="market-recap-grid"><div><h3>概念/题材与资金方向</h3><div id="marketRecapMainlines"></div></div><div><h3>涨停梯队与风险</h3><div id="marketRecapEmotion"></div></div></div>
+        <div class="market-recap-flow"><div class="panel-heading"><h3>资金流向图</h3><span class="data-meta">点击柱形查看来源、日期与口径</span></div><div id="marketRecapFlowChart" class="market-recap-flow-chart"></div><div id="marketRecapFlowDetail" class="method-note">选择一个行业或概念查看资金明细。</div></div>
+        <div class="market-recap-candidates-head"><h3>精选候选 · 最多 5 只</h3><span id="marketRecapCandidateMeta" class="data-meta"></span></div>
+        <div id="marketRecapCandidates" class="candidate-card-list"></div>
+        <p id="marketRecapMethod" class="method-note"></p>
+      </div>
+    </section>
+    <div class="macro-row" style="display:flex;gap:12px;flex-wrap:wrap;">
+      <div class="macro-panel" style="flex:1;min-width:280px;" id="macroTempDisplay">
+        <div class="macro-header">🌡️ 市场温度</div>
+        <div id="tempGaugeDisplay"><span class="skeleton" style="display:inline-block;min-width:120px;">加载中</span></div>
+      </div>
+      <div class="macro-panel" style="flex:1;min-width:280px;" id="macroPulseDisplay">
+        <div class="macro-header">💓 市场脉搏 / 两融</div>
+        <div id="pulseMarginDisplay">加载中...</div>
+      </div>
+    </div>
+    <div class="macro-panel" id="macroNorthFlow">
+      <div class="macro-header">💬 市场舆情</div>
+      <div id="northFlowDisplay">加载中...</div>
+    </div>
+    <section class="macro-panel workflow-rail" aria-labelledby="workflowRailTitle"><div class="panel-heading"><h2 id="workflowRailTitle">从发现到纸面执行</h2><span class="data-meta">每一步都保留代码、数据日和风险门控</span></div><div class="workflow-steps"><button type="button" onclick="window.quickViewIntegrated('strategy','st-scan')"><b>1</b><span>发现候选</span></button><span class="workflow-arrow">→</span><button type="button" onclick="window.quickViewIntegrated('stock','s-overview')"><b>2</b><span>核验证据</span></button><span class="workflow-arrow">→</span><button type="button" onclick="window.quickViewIntegrated('risk','r-risk')"><b>3</b><span>风险与仓位</span></button><span class="workflow-arrow">→</span><button type="button" onclick="window.openPaperDraft()"><b>4</b><span>纸面预检</span></button></div></section>
+    <div class="macro-panel" id="macroQuickAccess" data-workflow-anchor="true">
+      <div class="macro-header">🔍 快捷查询</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+        <input id="qaSymbol" value="002714" style="flex:1;min-width:120px;" />
+        <button onclick="window.quickViewIntegrated('stock','s-kline')" style="background:#2563eb;border:none;padding:8px 14px;color:white;cursor:pointer;">K线</button>
+        <button onclick="window.quickViewIntegrated('stock','s-ml')" style="background:#8b5cf6;border:none;padding:8px 14px;color:white;cursor:pointer;">模型信号</button>
+        <button onclick="window.quickViewIntegrated('stock','s-panorama')" style="background:#1a5c3a;border:none;padding:8px 14px;color:white;cursor:pointer;">全景</button>
+        <button onclick="window.quickViewIntegrated('risk','r-portfolio')" style="background:#b42318;border:none;padding:8px 14px;color:white;cursor:pointer;">纸面账户</button>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>🖥️ 量化引擎 <small style="font-size:12px;color:#657282;margin-left:8px;">稳健统计分析 · 波动与流动性分析 · 成交冲击分析</small></h2>
+      <div class="engine-chips" id="engineStatus">
+        <span class="engine-chip"><i class="dot"></i>横截面收益分析</span>
+        <span class="engine-chip"><i class="dot"></i>稳健协方差估计 <small>29×29</small></span>
+        <span class="engine-chip"><i class="dot"></i>统一因子体系 <small>技术·估值·财务·情绪</small></span>
+        <span class="engine-chip"><i class="dot"></i>成交冲击估计</span>
+        <span class="engine-chip"><i class="dot"></i>资产配置 <small>因子协方差驱动</small></span>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>🖥️ 系统状态 <small style="font-size:12px;color:#657282;">数据服务 · 自动更新 · 数据质量</small></h2>
+      <div id="systemStatus"><span class="skeleton" style="display:inline-block;min-width:120px;">加载中</span></div>
+    </div>
+    <div class="panel">
+      <h2>🧠 最近扫描</h2>
+      <div id="scanPreview" class="empty">还没有扫描结果。去「策略」Tab运行。</div>
+    </div>
+    <div class="panel">
+      <h2>⚡ 快捷入口</h2>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;">
+        <button onclick="window.switchView('strategy')" style="padding:10px 18px;background:#2563eb;border:none;color:#fff;cursor:pointer;">🔍 扫描</button><button onclick="window.openIntegratedPanel('intraday')" style="padding:10px 18px;background:#b45309;border:none;color:#fff;cursor:pointer;">⏱ 9:25竞价报告</button>
+        <button onclick="window.switchView('stock')" style="padding:10px 18px;background:#1f7a5c;border:none;color:#fff;cursor:pointer;">📈 K线</button>
+        <button onclick="window.quickViewIntegrated('ops','o-chat')" style="padding:10px 18px;background:#b45309;border:none;color:#fff;cursor:pointer;">🤖 AI</button>
+        <button onclick="window.switchView('ops')" style="padding:10px 18px;background:#374151;border:none;color:#fff;cursor:pointer;">📡 监控</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════ 个股分析 ════════════════════════ -->
+  <section id="stock" class="view">
+    <header class="topbar">
+      <h1><span class="crumb">个股分析</span>🔍 个股分析</h1>
+      <div class="sub-nav">
+        <button class="sub-nav-btn active" data-sub="s-overview">决策台</button>
+        <button class="sub-nav-btn" data-sub="s-kline">K线</button>
+        <button class="sub-nav-btn" data-sub="s-ml">模型信号</button>
+        <button class="sub-nav-btn" data-sub="s-panorama">个股全景</button>
+        <button class="sub-nav-btn" data-sub="s-intraday">日内K线</button>
+        <button class="sub-nav-btn" data-sub="s-patterns">K线形态</button>
+        <button class="sub-nav-btn" data-sub="s-fundamental">基本面</button>
+        <button class="sub-nav-btn" data-sub="s-factors">多因子</button>
+        <button class="sub-nav-btn" data-sub="s-ai">AI分析</button>
+      </div>
+    </header>
+
+    <!-- 共享代码输入（兼容旧ID） -->
+    <div class="controls" style="margin-bottom:12px;">
+      <label>代码/名称<input id="sSymbol" value="002714" placeholder="输入股票代码或名称" /></label>
+      <input id="chartSymbol" type="hidden" />
+      <input id="svSymbol" type="hidden" />
+      <input id="fundSymbol" type="hidden" />
+      <input id="patternSymbol" type="hidden" />
+      <input id="earningsSymbol" type="hidden" />
+      <input id="intraSymbol" type="hidden" />
+      <input id="factorSymbol" type="hidden" />
+    </div>
+
+    <!-- 个股决策台：汇总行情、资金、研报和风险；原始数据页完整保留 -->
+    <div class="sub-view active" id="s-overview">
+      <div class="controls stock-overview-actions">
+        <button id="stockOverviewBtn" class="btn-sm">刷新决策台</button>
+        <span id="stockOverviewMeta" class="data-meta">等待加载</span>
+      </div>
+      <div id="stockOverviewState" class="data-state loading">正在汇总个股数据、资金动态和研报证据...</div>
+      <div id="stockOverviewContent" hidden>
+        <div class="stock-command-grid">
+          <section class="panel stock-command" id="stockDecisionPanel"></section>
+          <section class="panel stock-command" id="stockQuotePanel"></section>
+          <section class="panel stock-command" id="stockFlowPanel"></section>
+          <section class="panel stock-command" id="stockRiskPanel"></section>
+          <section class="panel stock-command" id="stockCommodityPanel"></section>
+           <section class="panel stock-command" id="stockMarginPanel"></section>
+        </div>
+        <section class="panel stock-decision-detail" id="stockDecisionDetail"></section>
+        <div class="split stock-evidence-grid">
+          <section class="panel">
+            <div class="panel-heading"><h2>资金历史时序</h2><span id="stockFlowSource" class="data-meta"></span></div>
+            <div class="stock-flow-switch" role="group" aria-label="资金证据口径">
+              <button type="button" class="btn-sm active" data-stock-flow-mode="stock">个股主力</button>
+              <button type="button" class="btn-sm" data-stock-flow-mode="industry">行业代理</button>
+            </div>
+            <div id="stockFlowChart" class="stock-flow-chart"></div>
+          </section>
+          <section class="panel">
+            <div class="panel-heading"><h2>研报决策证据</h2><span id="stockResearchMeta" class="data-meta"></span></div>
+            <div id="stockResearchList" class="evidence-list"></div>
+          </section>
+        </div>
+        <div id="stockSourceStatus" class="source-status-strip"></div>
+      </div>
+    </div>
+
+    <!-- K线 -->
+    <div class="sub-view" id="s-kline">
+      <div class="controls">
+        <label>开始日期<input id="chartStart" value="20240601" /></label>
+        <div class="period-group">
+          <button class="period-btn active" data-period="daily">日线</button>
+          <button class="period-btn" data-period="weekly">周线</button>
+          <button class="period-btn" data-period="monthly">月线</button>
+        </div>
+        <label class="check"><input id="chartAnimate" type="checkbox" checked />动图</label>
+        <label class="check"><input id="chartRefresh" type="checkbox" />强制刷新</label>
+        <button id="loadChartBtn" class="btn-sm">加载</button>
+      </div>
+      <div id="chartConclusion" class="conclusion-box" style="display:none;"><div id="conclusionBody"></div></div>
+      <div class="split">
+        <div class="panel" id="klineChart" style="height:420px;"></div>
+        <div class="panel" id="radarChart" style="height:320px;"></div>
+      </div>
+      <div class="metrics" id="snapshotMetrics"></div>
+      <div class="tableWrap"><table id="snapshotTable"></table></div>
+    </div>
+
+    <!-- 模型信号 -->
+    <div class="sub-view" id="s-ml">
+      <div class="controls">
+        <label>代码<input id="mlSignalSymbol" value="002714" placeholder="输入股票代码" /></label><button id="mlSignalBtn">预测</button>
+        <button id="mlSignalScanBtn">扫描看板</button>
+        <button id="mlImportanceBtn">特征重要性</button>
+      </div>
+      <div class="metrics" id="mlSignalMetrics"></div>
+      <div class="panel" id="mlSignalResult" style="min-height:180px;"></div>
+      <div class="tableWrap"><table id="mlSignalTable"></table></div>
+    </div>
+
+    <!-- 个股全景 -->
+    <div class="sub-view" id="s-panorama">
+      <div class="controls">
+        <input id="lensCode" placeholder="股票代码 如 600519" value="002714" style="background:#161b22;color:#e6edf3;border:1px solid #30363d;border-radius:6px;padding:6px 10px;width:180px;margin-left:12px;" />
+        <button id="lensRefreshBtn">🔭 全景透视</button>
+        <button id="lensWatchlistBtn" class="btn-sm" style="background:#2563eb;">📋 自选全景</button>
+        <span id="lensMeta" style="color:#657282;font-size:12px;margin-left:8px;"></span>
+      </div>
+      <div id="lensContent"><div class="empty skeleton">输入代码点击「全景透视」— 短线(龙虎榜/涨停/概念/资金) + 中线(融资盘/筹码/基金/估值) + 长线(宏观/价值) 三视角</div></div>
+      <div class="panel stock-lens-note">当前全景与决策台使用同一代码、同一数据口径；交易门控、基础画像、行业商品、资金、新闻和研报证据以决策台为准。</div>
+    </div>
+
+    <!-- 日内K线 -->
+    <div class="sub-view" id="s-intraday">
+      <div class="controls">
+        <label>开始日期<input id="intraStart" value="" /></label>
+        <label>结束日期<input id="intraEnd" value="" /></label>
+        <div class="period-group">
+          <button class="intra-period-btn active" data-period="5">5分钟</button>
+          <button class="intra-period-btn" data-period="15">15分钟</button>
+          <button class="intra-period-btn" data-period="30">30分钟</button>
+          <button class="intra-period-btn" data-period="60">60分钟</button>
+        </div>
+        <button id="loadIntradayBtn" class="btn-sm">加载</button>
+      </div>
+      <div class="panel" id="intradayChart" style="height:600px;"></div>
+    </div>
+
+    <!-- K线形态 -->
+    <div class="sub-view" id="s-patterns">
+      <div class="controls">
+        <label>开始日期<input id="patternStart" value="20240601" /></label>
+        <button id="patternLoadBtn">加载</button>
+      </div>
+      <div class="metrics" id="patternMetrics"></div>
+      <div class="tableWrap"><table id="patternTable"></table></div>
+    </div>
+
+    <!-- 基本面 -->
+    <div class="sub-view" id="s-fundamental">
+      <div class="controls">
+        <button id="fundRefreshBtn">查询</button>
+      </div>
+      <div class="metrics" id="fundMetrics"></div>
+    </div>
+    <div class="sub-view" id="s-factors">
+      <div class="controls">
+        <button id="factorRefreshBtn" onclick="loadFactorScan()">极端因子扫描</button>
+      </div>
+      <div id="factorScanResult"><div class="empty">点击「极端因子扫描」查看多因子极端提醒（技术/估值/财务/情绪，任一极端即提醒）</div></div>
+    </div>
+
+    <!-- AI 多模型分析 -->
+    <div class="sub-view" id="s-ai">
+      <div class="controls" style="flex-wrap:wrap;gap:10px;">
+        <label>分析模型
+          <select id="aiModel">
+            <option value="deepseek/deepseek-v4-flash">快速研究模型</option>
+            <option value="chatgpt-plus/gpt-5.5">综合研究模型</option>
+            <option value="claude-kiro/claude-sonnet-5">深度研究模型</option>
+            <option value="claude-kiro/claude-opus-4-8">深度推理模型</option>
+            <option value="grok-api/grok-4.5">实时研究模型</option>
+            <option value="qwen/qwen3.5-plus">中文分析模型</option>
+          </select>
+        </label>
+        <label>分析类型
+          <select id="aiType">
+            <option value="panorama">全景分析</option>
+            <option value="factor">因子解读</option>
+            <option value="macro">宏观影响</option>
+            <option value="review">复盘</option>
+          </select>
+        </label>
+        <button id="aiAnalyzeBtn" onclick="loadStockAiAnalysis()">开始分析</button>
+        <span style="color:#657282;font-size:12px;">选择分析方式后生成综合解读，预计需要 1–3 分钟</span>
+      </div>
+      <div id="aiAnalyzeResult"><div class="empty">选择模型和分析类型，点击「开始分析」。</div></div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════ 因子工坊 ════════════════════════ -->
+  <section id="factors" class="view">
+    <header class="topbar">
+      <h1><span class="crumb">因子工坊</span>因子决策中心 <span class="factor-title-meta">质量门禁 · 样本外验证 · 权重 · 回测风险</span></h1>
+      <div class="sub-nav">
+        <button class="sub-nav-btn active" data-sub="f-overview">决策总览</button>
+        <button class="sub-nav-btn" data-sub="f-library">因子库</button>
+        <button class="sub-nav-btn" data-sub="f-scan">个股扫描</button>
+        <button class="sub-nav-btn" data-sub="f-ic">信息系数分析</button>
+        <button class="sub-nav-btn" data-sub="f-combine">因子组合评估</button>
+      </div>
+    </header>
+
+    <!-- 因子决策总览 -->
+    <div class="sub-view active" id="f-overview">
+      <div class="factor-overview-toolbar">
+        <div>
+          <h2>当前可用因子池</h2>
+          <div id="foMeta" class="factor-muted">正在读取真实质量账本和回测产物...</div>
+        </div>
+        <button id="foRefreshBtn" type="button" onclick="loadFactorOverview(true)">刷新</button>
+      </div>
+      <div id="foGate" class="factor-gate"></div>
+      <div id="foKpis" class="factor-kpis"></div>
+      <div class="factor-overview-grid">
+        <section class="factor-surface">
+          <div class="factor-section-head"><h3>建议权重与样本外强度</h3><span id="foWeightNote" class="factor-muted"></span></div>
+          <div id="foWeightChart" class="factor-chart"><div class="empty">加载中...</div></div>
+        </section>
+        <section class="factor-surface">
+          <div class="factor-section-head"><h3>真实回测风险</h3><span class="factor-muted">结果异常时只用于研究</span></div>
+          <div id="foBacktest"></div>
+        </section>
+      </div>
+      <div class="factor-surface factor-table-surface">
+        <div class="factor-section-head">
+          <h3>因子决策明细</h3>
+          <div class="factor-filter-row">
+            <input id="foSearch" type="text" placeholder="搜索因子" oninput="renderFactorOverviewTable()" />
+            <select id="foTier" onchange="renderFactorOverviewTable()"><option value="">全部层级</option><option value="core">核心</option><option value="candidate">候选</option><option value="observe">观察</option><option value="blocked">阻断</option></select>
+            <select id="foOos" onchange="renderFactorOverviewTable()"><option value="">全部验证</option><option value="verified">已完成样本外验证</option><option value="unverified">尚未完成样本外验证</option></select>
+          </div>
+        </div>
+        <div class="tableWrap"><table class="factor-decision-table"><thead><tr><th>因子</th><th>层级</th><th>建议权重</th><th>方向</th><th>IC</th><th>信息系数稳定性</th><th>样本外信息系数</th><th>样本外信息系数稳定性</th><th>覆盖率</th><th>状态/原因</th></tr></thead><tbody id="foTbody"><tr><td colspan="10"><div class="empty">加载中...</div></td></tr></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- 因子库 -->
+    <div class="sub-view" id="f-library">
+      <div class="controls">
+        <label>搜索<input id="flSearch" placeholder="因子名/描述…" style="min-width:160px;" oninput="renderFactorLibrary()" /></label>
+        <label>分类
+          <select id="flCat" onchange="renderFactorLibrary()">
+            <option value="">全部</option>
+            <option value="技术面">技术面</option>
+            <option value="资金面">资金面</option>
+            <option value="估值面">估值面</option>
+            <option value="财务面">财务面</option>
+            <option value="情绪面">情绪面</option>
+          </select>
+        </label>
+        <label>用途
+          <select id="flUsage" onchange="renderFactorLibrary()">
+            <option value="">全部</option>
+            <option value="quant">量化候选</option>
+            <option value="analysis">分析用</option>
+          </select>
+        </label>
+        <span id="flSummary" style="color:#657282;font-size:13px;"></span>
+      </div>
+      <div class="tableWrap"><table id="flTable" class="risk-table" style="width:100%;">
+        <thead><tr><th>因子</th><th>分类</th><th>权重</th><th>方向</th><th>阈值(高/低)</th><th>分位</th><th>z-score</th><th>用途</th><th>说明</th></tr></thead>
+        <tbody id="flTbody"><tr><td colspan="9"><div class="empty">加载因子库…</div></td></tr></tbody>
+      </table></div>
+    </div>
+
+    <!-- 个股扫描 -->
+    <div class="sub-view" id="f-scan">
+      <div class="controls">
+        <label>代码/名称<input id="fsSymbol" value="002714" placeholder="输入股票代码或名称" /></label>
+        <button onclick="loadFactorScanFrom('fsSymbol','fsScanResult')">极端因子扫描</button>
+        <span style="color:#657282;font-size:12px;">任一因子极端即提醒，不因权重小而忽略</span>
+      </div>
+      <div id="fsScanResult"><div class="empty">输入代码后点击「极端因子扫描」</div></div>
+    </div>
+
+    <!-- 信息系数分析 -->
+    <div class="sub-view" id="f-ic">
+      <div class="controls">
+        <label>开始<input id="ficStart" value="20230101" /></label>
+        <label>结束<input id="ficEnd" value="" /></label>
+        <button onclick="loadFactorIC()">计算IC</button>
+        <span style="color:#657282;font-size:12px;">因子与未来收益相关性（RankIC）</span>
+      </div>
+      <div class="metrics" id="ficMetrics"></div>
+      <div class="panel" id="ficChart" style="height:340px;"><div class="empty">点击「计算IC」查看因子IC表现</div></div>
+      <div class="tableWrap"><table id="ficTable" class="risk-table" style="width:100%;"><thead><tr><th>因子</th><th>IC均值</th><th>信息系数稳定性</th><th>胜率</th><th>评级</th></tr></thead><tbody id="ficTbody"></tbody></table></div>
+    </div>
+
+    <!-- 因子组合评估 -->
+    <div class="sub-view" id="f-combine">
+      <div class="controls">
+        <label>合成方法
+          <select id="fcMethod">
+            <option value="equal">等权</option>
+            <option value="weighted">加权</option>
+            <option value="zscore">Z-score</option>
+          </select>
+        </label>
+        <button onclick="loadFactorCombine()">合成评估</button>
+        <span style="color:#657282;font-size:12px;">多因子组合与单因子对比</span>
+      </div>
+      <div class="metrics" id="fcMetrics"></div>
+      <div class="panel" id="fcChart" style="height:340px;"><div class="empty">选择合成方法后评估</div></div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════ 策略 ════════════════════════ -->
+  <section id="strategy" class="view">
+    <header class="topbar">
+      <h1><span class="crumb">策略</span>📈 策略中心</h1>
+      <div class="sub-nav">
+        <button class="sub-nav-btn active" data-sub="st-scan">扫描</button>
+        <button class="sub-nav-btn" data-sub="st-backtest">回测</button>
+        <button class="sub-nav-btn" data-sub="st-optimize">优化</button>
+        <button class="sub-nav-btn" data-sub="st-dashboard">回测看板</button>
+        <button class="sub-nav-btn" data-sub="st-compare">策略对比</button>
+        <button class="sub-nav-btn" data-sub="st-skills">策略库</button>
+        <button class="sub-nav-btn " data-sub="st-event-backtest">事件回测</button>
+      </div>
+    </header>
+
+    <!-- 扫描（原 scan） -->
+    <div class="sub-view active" id="st-scan">
+      <div class="panel" style="margin-bottom:14px;">
+        <h2>📋 看板 <button id="wlImportBtn" class="btn-sm" style="margin-left:8px;">← 从输入导入</button></h2>
+        <div id="watchlistDisplay" class="watchlist"></div>
+        <div class="wl-row">
+          <input id="wlInput" placeholder="代码，逗号/空格分隔" class="wl-input" />
+          <button id="wlAddBtn" class="btn-sm">添加</button>
+          <button id="wlSaveBtn" class="btn-sm btn-green">保存</button>
+        </div>
+      </div>
+      <div class="controls">
+        <label>代码/名称<input id="scanSymbols" value="002714 601899" placeholder="输入代码" /></label>
+        <label>开始日期<input id="scanStart" value="20240101" /></label>
+        <label class="check"><input id="scanRefresh" type="checkbox" />强制刷新</label>
+        <button id="scanBtn">运行扫描</button>
+      </div>
+      <div id="scanActions" style="display:none;margin-bottom:12px;">
+        <button id="alertFeishuBtn" style="background:#b42318;">🔔 预警飞书</button>
+        <button id="scanCsvBtn" class="btn-sm" style="background:#374151;">📥 CSV</button>
+      </div>
+      <div class="tableWrap"><table id="scanTable"></table></div>
+    </div>
+
+    <!-- 回测 -->
+    <div class="sub-view" id="st-backtest">
+      <div class="controls">
+        <label>代码/名称<input id="btSymbols" value="002714" placeholder="输入代码" /></label>
+        <label>开始日期<input id="btStart" value="20230101" /></label>
+        <label class="check"><input id="btRefresh" type="checkbox" />强制刷新</label>
+        <button id="backtestBtn">运行回测</button>
+        <button id="btPortfolioBtn" class="btn-sm" style="background:#2563eb;">组合回测</button>
+      </div>
+      <div id="btSummary" class="bt-summary" style="display:none;">
+        <div class="bt-metrics" id="btMetrics"></div>
+        <div id="btEquityChart" style="width:100%;height:280px;margin-top:12px;"></div>
+        <h2 style="margin:14px 0 8px;">📅 月度收益</h2>
+        <div id="btMonthlyChart" style="width:100%;height:180px;"></div>
+        <h2 style="margin:14px 0 8px;">逐笔交易</h2>
+        <div class="tableWrap"><table id="btTradeTable"></table></div>
+      </div>
+      <div id="btOldTable">
+        <div class="tableWrap"><table id="backtestTable"></table></div>
+      </div>
+      <div id="btActions" style="display:none;margin-top:12px;">
+        <button id="btAlertFeishuBtn" style="background:#b42318;">🔔 预警飞书</button>
+        <button id="btCsvBtn" class="btn-sm" style="background:#374151;">📥 CSV</button>
+      </div>
+    </div>
+
+    <!-- 优化 -->
+    <div class="sub-view" id="st-optimize">
+      <header class="topbar"><h1>网格搜索优化</h1><button id="optimizeBtn">运行优化</button></header>
+      <div class="controls">
+        <label>代码/名称<input id="optSymbol" value="002714" placeholder="输入代码或名称" /></label>
+        <label>开始日期<input id="optStart" value="20230101" /></label>
+        <label class="check"><input id="optRefresh" type="checkbox" />强制刷新</label>
+      </div>
+      <div class="panel" style="margin-bottom:14px;">
+        <h2>参数搜索范围</h2>
+        <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:end;">
+          <label>快线MA<input id="opt_fast" value="5,10,20" placeholder="逗号分隔" style="width:120px;" /></label>
+          <label>慢线MA<input id="opt_slow" value="20,30,60" placeholder="逗号分隔" style="width:120px;" /></label>
+          <label>止损%<input id="opt_stop" value="5,8,10" placeholder="逗号分隔" style="width:100px;" /></label>
+          <label>止盈%<input id="opt_take" value="15,20,25" placeholder="逗号分隔" style="width:100px;" /></label>
+          <label>排序<select id="optSortBy" style="width:120px;padding:8px;">
+            <option value="total_return_pct">总收益</option>
+            <option value="sharpe">夏普</option>
+            <option value="max_drawdown_pct">最大回撤</option>
+            <option value="win_rate_pct">胜率</option>
+            <option value="trade_count">交易次数</option>
+          </select></label>
+        </div>
+      </div>
+      <div id="optResults" style="display:none;">
+        <div class="tableWrap"><table id="optimizeTable"></table></div>
+      </div>
+    </div>
+
+    <!-- 回测看板 -->
+    <div class="sub-view" id="st-dashboard">
+      <div class="controls">
+        <button id="btDashboardRefresh">刷新</button>
+      </div>
+      <div class="metrics" id="btDashboardMetrics"></div>
+      <div class="panel" id="btDashboardChart" style="height:250px;"></div>
+      <div class="tableWrap"><table id="btDashboardTable"><tbody><tr><td>加载中...</td></tr></tbody></table></div>
+    </div>
+
+    <!-- 策略对比 -->
+    <div class="sub-view" id="st-compare">
+      <div class="controls">
+        <button id="stCompareRefreshBtn">刷新</button>
+      </div>
+      <div class="panel" id="strategyRadar" style="height:300px;"></div>
+      <div class="tableWrap"><table id="strategyTable"><tbody><tr><td>加载中...</td></tr></tbody></table></div>
+    </div>
+
+    <!-- 策略库 -->
+    <div class="sub-view" id="st-skills">
+      <div class="controls">
+        <input id="skillsSearch" placeholder="搜索策略..." style="flex:1;" />
+        <span id="skillsCount" style="color:#657282;font-size:13px;"></span>
+      </div>
+      <div id="skillsList" class="panel" style="min-height:200px;">加载中...</div>
+      <div id="skillsDetail" class="panel" style="display:none;margin-top:8px;"></div>
+    </div>
+    <!-- 事件回测 -->
+    <div class="sub-view" id="st-event-backtest">
+      <div class="controls">
+        <button id="eventBtRunBtn">运行回测</button>
+        <label>标的<input id="eventBtSymbols" value="002714,600519,000858,601899" style="width:200px;" /></label>
+        <label>起始日<input id="eventBtStart" value="20260101" style="width:80px;" /></label>
+        <label>策略<select id="eventBtMode"><option value="ma">MA交叉</option><option value="macd">MACD</option></select></label>
+        <label>资金<input id="eventBtCapital" value="1000000" style="width:80px;" /></label>
+        <label>滑点<select id="eventBtSlippage"><option value="dynamic">动态滑点</option><option value="flat">固定滑点（5个基点）</option><option value="almgren" selected>成交冲击模型</option></select></label>
+      </div>
+      <div class="metrics" id="eventBtMetrics"></div>
+      <div class="macro-row" style="display:flex;gap:12px;flex-wrap:wrap;">
+        <div class="macro-panel" style="flex:2;min-width:300px;">
+          <div class="macro-header">资金曲线</div>
+          <div id="eventBtChart" style="height:280px;"><div class="empty">运行回测以查看</div></div>
+        </div>
+        <div class="macro-panel" style="flex:1;min-width:200px;">
+          <div class="macro-header">交易明细</div>
+          <div id="eventBtTrades" style="max-height:280px;overflow:auto;"><div class="empty">暂无交易</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════ 市场数据 ════════════════════════ -->
+  <section id="market" class="view">
+    <header class="topbar">
+      <h1><span class="crumb">市场数据</span>🌐 市场数据</h1>
+      <div class="sub-nav">
+        <button class="sub-nav-btn active" data-sub="m-sector">板块轮动</button>
+        <button class="sub-nav-btn" data-sub="m-flow">资金与结构</button>
+        <button class="sub-nav-btn" data-sub="m-temp">市场温度</button>
+        <button class="sub-nav-btn" data-sub="m-regime">市场状态</button>
+        <button class="sub-nav-btn" data-sub="m-margin">两融</button>
+        <button class="sub-nav-btn" data-sub="m-north">沪深港通</button>
+        <button class="sub-nav-btn" data-sub="m-sentiment">市场舆情</button>
+        <button class="sub-nav-btn" data-sub="m-global">港美股</button>
+        <button class="sub-nav-btn" data-sub="m-history">历史数据中心</button>
+        <button class="sub-nav-btn" data-sub="m-calendar">宏观/财报日历</button>
+        <button class="sub-nav-btn " data-sub="m-attribution">驱动归因</button>
+         <button class="sub-nav-btn" data-sub="m-etf">ETF份额与资金</button>
+      </div>
+    </header>
+
+    <!-- 板块轮动 -->
+    <div class="sub-view active" id="m-sector">
+      <div class="controls">
+        <button id="srRefreshBtn">刷新</button><button id="allDayIndustryBtn" class="btn-sm">全天行业</button>
+        <label>板块代码<input id="sectorSymbols" value="002714 601899 000858 600519 002594 300750" /></label>
+        <button id="sectorLoadBtn" class="btn-sm">板块分布</button>
+        <button id="sectorRefreshBtn" class="btn-sm" style="background:#374151;">刷新板块数据</button>
+      </div>
+      <div class="panel" id="srChart" style="height:300px;margin-bottom:12px;"></div>
+      <div class="panel" style="margin-bottom:12px"><div class="macro-header">板块涨跌热力图</div><div id="srHeatmapChart" style="height:300px"></div></div>
+      <div class="panel" style="margin-bottom:12px"><div class="macro-header">资金流入/流出零轴图</div><div id="industryFlowChart" style="height:380px"></div><div id="industryFlowMeta" class="empty">显示最近有效数据的流入与流出极值</div></div>
+      <div class="tableWrap"><table id="srTable"></table></div>
+      <div id="sectorView" style="display:none;margin-top:12px;">
+        <div class="panel" style="margin-bottom:14px;">
+          <h2>板块分布</h2>
+          <div id="sectorChart" style="width:100%;height:300px;"></div>
+        </div>
+        <div class="tableWrap"><table id="sectorTable"></table></div>
+      </div>
+    </div>
+
+    <!-- 资金与结构：日频真实净流入 + 盘中成交额方向代理 + ETF分时回放 -->
+    <div class="sub-view" id="m-flow">
+      <div class="controls">
+        <label>数据层<select id="flowMode"><option value="daily">日频行业/概念真实净流入</option><option value="intraday_real">盘中行业真实主力净流入</option><option value="intraday">盘中行业成交额方向代理</option><option value="market">盘中全市场成交结构</option><option value="etf">盘中ETF成交额方向代理</option></select></label>
+        <label>交易日<select id="flowDate"><option value="">加载可用日期...</option></select></label>
+        <label>显示数量<select id="flowTopN"><option value="8">8</option><option value="12" selected>12</option><option value="20">20</option></select></label>
+        <button id="flowLoadBtn">加载资金结构</button>
+        <button id="flowLatestBtn" class="btn-sm">最新可用日</button>
+      </div>
+      <div class="metrics" id="flowMetrics"></div>
+      <div class="panel" style="margin-bottom:12px"><div class="macro-header">资金时间轴与滚动比较</div><div id="flowChart" style="height:380px"></div><div id="flowMeta" class="empty">选择数据层后加载；日频为真实净流入，盘中为成交额方向代理。</div></div>
+      <div class="macro-row" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px"><div class="macro-panel" style="flex:1;min-width:320px"><div class="macro-header">当日流入 / 强势</div><div id="flowInList" class="empty">等待加载</div></div><div class="macro-panel" style="flex:1;min-width:320px"><div class="macro-header">当日流出 / 弱势</div><div id="flowOutList" class="empty">等待加载</div></div></div>
+      <div class="tableWrap"><table id="flowTable"><tbody><tr><td>选择数据层后加载</td></tr></tbody></table></div>
+    </div>
+
+    <!-- 市场温度 -->
+    <div class="sub-view" id="m-temp">
+      <div class="controls">
+        <button id="mtRefreshBtn">刷新</button>
+      </div>
+      <div class="metrics" id="mtMetrics"></div>
+      <div class="panel" id="mtGauge" style="height:300px;"></div>
+    </div>
+
+    <!-- 市场状态 -->
+    <div class="sub-view" id="m-regime">
+      <div class="controls">
+        <button id="regimeRefreshBtn">刷新</button>
+      </div>
+      <div class="metrics" id="regimeMetrics"></div>
+      <div class="panel" id="regimeResult" style="min-height:180px;">点击刷新查看市场状态。</div>
+      <div class="tableWrap"><table id="regimeTable"></table></div>
+    </div>
+
+    <!-- 两融 -->
+    <div class="sub-view" id="m-margin">
+      <div class="controls">
+        <button id="marginRefreshBtn">刷新汇总</button>
+      </div>
+      <div class="metrics" id="marginSummary"></div>
+      <div class="panel" style="margin-top:14px;">
+        <h2>个股两融查询（已移至个股决策台）</h2>
+        <div class="controls">
+          <label>代码/名称<input id="marginSymbol" value="002714" placeholder="输入股票代码" /></label>
+          <button id="marginQueryBtn" class="btn-sm">查询</button>
+        </div>
+        <div id="marginDetail"></div>
+      </div>
+    </div>
+
+    <!-- 沪深港通：保留历史功能，与市场舆情并存；停更或接口异常时如实显示。 -->
+    <div class="sub-view" id="m-north">
+      <div class="controls"><button id="northboundRefreshBtn">刷新沪深港通</button></div>
+      <div class="northbound-columns"><section><div id="northboundState" class="data-state loading">正在读取沪深港通资金流可用数据…</div><div class="metrics" id="northboundMetrics"></div><div class="panel" id="northboundNote">北向日频净流入披露规则变化后，系统保留入口和历史记录，不以舆情替代资金。</div><div class="tableWrap"><table id="northboundTable"></table></div></section><section><div id="northboundHoldingsState" class="data-state loading">正在读取北向持股结构…</div><div class="metrics" id="northboundHoldingsMetrics"></div><div class="panel" id="northboundHoldingsNote">持股数量、持股市值、占流通股比例和区间变化独立于资金流。</div><div class="tableWrap"><table id="northboundHoldingsTable"></table></div></section></div>
+    </div>
+
+    <!-- 市场舆情 -->
+    <div class="sub-view" id="m-sentiment">
+      <div class="controls"><button id="northRefreshBtn">刷新市场舆情</button></div>
+      <div class="metrics" id="northMetrics"></div>
+      <div class="panel" id="sentimentNarrative">加载股吧、微博、百度、B站/雪球等市场舆情指标…</div>
+      <div class="tableWrap"><table id="northTable"></table></div>
+    </div>
+
+    <!-- 港美股 -->
+    <div class="sub-view" id="m-global">
+      <div class="controls">
+        <button id="globalRefreshBtn">刷新</button>
+        <label>代码/名称<input id="globalSymbols" value="hk00700,usAAPL" placeholder="逗号分隔" /></label>
+      </div>
+      <div class="tableWrap"><table id="globalTable"></table></div>
+      <div class="panel" style="margin-top:14px;position:relative;" id="globalKlinePanel" hidden>
+        <h2 id="globalKlineTitle">K线图</h2>
+        <div id="globalKlineStatus" style="color:#f0b429;font-size:12px;margin-bottom:6px;"></div>
+        <div id="globalKlineChart" style="width:100%;height:400px;"></div>
+      </div>
+    </div>
+
+    <!-- 历史数据中心：多市场历史抓取/落库/显示全链路 -->
+    <div class="sub-view" id="m-history">
+      <div class="controls">
+        <button id="mhRefreshBtn">刷新全部状态</button>
+        <button id="mhFetchBtn" class="btn-sm" style="background:#2563eb;">更新数据情况</button>
+        <span style="color:var(--muted);font-size:12px;">目录刷新不触发远程批量抓取；按资产单独抓取。每项显示来源、日期覆盖、行数与失败原因。</span>
+      </div>
+      <div class="metrics" id="mhMetrics"></div>
+      <div class="tableWrap"><table id="mhTable"></table></div>
+      <div class="panel" style="margin-top:14px;">
+        <div class="macro-header">历史曲线（点击资产切换，仅展示真实数据） <select id="mhDays" onchange="reloadCurrentHistory()"><option value="60">60日</option><option value="250" selected>250日</option><option value="800">全部可视</option></select></div>
+        <div id="mhChart" style="width:100%;height:360px;"><div class="empty">点击上方资产加载历史曲线</div></div>
+        <div id="mhChartMeta" style="color:var(--muted);font-size:12px;margin-top:6px;"></div>
+      </div>
+    </div>
+
+    <!-- 日历（宏观+财报） -->
+    <div class="sub-view" id="m-calendar">
+      <div class="controls">
+        <label>月份<input id="macroCalMonth" value="" placeholder="YYYY-MM" /></label>
+        <button id="macroCalRefreshBtn">宏观日历</button>
+        <label>代码<input id="calendarEarningsSymbol" value="002714" /></label>
+        <button id="earningsLoadBtn">财报日历</button>
+      </div>
+      <div class="tableWrap"><table id="macroCalTable"></table></div>
+      <div class="metrics" id="earningsMetrics"></div>
+      <div class="tableWrap"><table id="earningsTable"></table></div>
+    </div>
+
+    <!-- ETF资金与国家队线索 -->
+    <div class="sub-view" id="m-etf">
+      <div class="controls"><label>ETF名称/代码<input id="etfSymbolSearch" value="510300" placeholder="如 沪深300ETF / 510300" /></label><label>历史天数<select id="etfHistoryDays"><option>20</option><option selected>10</option><option>120</option></select></label><button id="etfRefreshBtn">查询ETF资金</button></div>
+      <div class="metrics" id="etfMetrics"></div>
+      <div class="panel" id="etfStatus" style="min-height:70px;">选择ETF查看份额变化、规模和成交历史；份额差只代表相邻快照方向，不等同于每日申购或赎回流水</div>
+      <!-- 兼容旧契约：份额变化 / 申赎方向代理；用户界面只展示相邻快照方向，避免误读为逐日流水。 -->
+       <div class="chart-grid-2" style="margin-bottom:12px"><div class="panel"><div class="macro-header">份额变化（相邻快照方向）</div><div id="etfShareChart" style="height:320px"></div></div><div class="panel"><div class="macro-header">总规模与成交额</div><div id="etfScaleChart" style="height:320px"></div></div></div>
+      <div class="panel"><div class="panel-heading"><h2>官方稳市/汇金事件参考</h2><span class="data-meta">市场级事件，不等于该ETF逐日申赎</span></div><div id="etfEventList" class="evidence-list" style="height:auto;max-height:220px;"></div></div>
+      <div class="tableWrap"><table id="etfTable"></table></div>
+    </div>
+
+    <!-- 驱动归因 -->
+    <div class="sub-view" id="m-attribution">
+      <div class="controls">
+        <button id="attrRefreshBtn">刷新归因</button>
+      </div>
+      <div class="metrics" id="attrMetrics"></div>
+      <div class="panel" id="attrSummary" style="min-height:100px;">点击刷新查看今日驱动因子归因</div>
+      <div class="tableWrap"><table id="attrTable"></table></div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════ 风控 ════════════════════════ -->
+  <section id="risk" class="view">
+    <header class="topbar">
+      <h1><span class="crumb">风控</span>🛡️ 风控与机会</h1>
+      <div class="sub-nav">
+        <button class="sub-nav-btn active" data-sub="r-portfolio">纸面账户</button>
+        <button class="sub-nav-btn" data-sub="r-risk">风险分析</button>
+        <button class="sub-nav-btn " data-sub="r-factor">因子分析</button>
+        <button class="sub-nav-btn " data-sub="r-financial">财务因子</button>
+        <button class="sub-nav-btn " data-sub="r-fama">横截面回归</button>
+        <button class="sub-nav-btn" data-sub="r-opportunity">机会发现</button>
+        <button class="sub-nav-btn" data-sub="r-news">新闻情绪</button>
+        <button class="sub-nav-btn " data-sub="r-optimizer">组合优化</button>
+        <button class="sub-nav-btn " data-sub="r-allocation">资产配置</button>
+      </div>
+    </header>
+
+    <!-- 持仓 -->
+    <div class="sub-view active" id="r-portfolio">
+      <div class="controls">
+        <label>代码<input id="pfSymbol" value="002714" /></label>
+        <label>名称<input id="pfName" placeholder="可选" /></label>
+        <label>股数<input id="pfShares" type="number" value="100" min="0" /></label>
+        <label>成本<input id="pfCost" type="number" step="0.01" value="0" min="0" /></label>
+        <button id="pfAddBtn">生成订单草稿</button>
+        <button id="pfRefreshBtn">刷新</button>
+      </div>
+      <div class="metrics" id="pfMetrics"></div>
+      <div class="panel" id="pfResult" style="min-height:80px;"></div>
+      <div class="tableWrap"><table id="pfTable"></table></div>
+    </div>
+
+    <!-- 组合风险 -->
+    <div class="sub-view" id="r-risk">
+      <div class="controls">
+        <button id="prRefreshBtn">计算</button>
+      </div>
+      <div class="metrics" id="prMetrics"></div>
+      <div class="panel" style="position:relative;"><div id="prChart" style="width:100%;height:300px;"></div></div>
+    </div>
+
+    <!-- 因子分析 -->
+    <div class="sub-view" id="r-factor">
+      <div class="controls">
+        <button id="factorModelRefreshBtn">刷新</button>
+      </div>
+      <div class="metrics" id="factorMetrics"></div>
+      <div class="panel" id="factorChart" style="height:250px;"></div>
+      <div class="tableWrap"><table id="factorTable"><tbody><tr><td>加载中...</td></tr></tbody></table></div>
+    </div>
+
+    <!-- 财务因子 -->
+    <div class="sub-view" id="r-financial">
+      <div class="controls">
+        <label>代码<input id="finDataSymbol" value="002714" /></label>
+        <button id="finDataRefreshBtn">查询</button>
+      </div>
+      <div class="metrics" id="finDataMetrics"></div>
+      <div class="panel" id="finDataPanel" style="min-height:120px;">输入代码查询财务因子数据</div>
+    </div>
+
+    <!-- 横截面收益分析 -->
+    <div class="sub-view" id="r-fama">
+      <div class="controls">
+        <button id="famaRunBtn">运行截面回归</button>
+        <select id="famaDates" style="width:160px;">
+          <option value="10">10 截面</option>
+          <option value="20">20 截面</option>
+          <option value="40" selected>40 截面</option>
+        </select>
+      </div>
+      <div class="metrics" id="famaMetrics"></div>
+      <div class="macro-row" style="display:flex;gap:12px;flex-wrap:wrap;">
+        <div class="macro-panel" style="flex:1;min-width:300px;">
+          <div class="macro-header">因子收益率排名</div>
+          <div id="famaFactorTable" style="max-height:350px;overflow-y:auto;"><div class="empty">运行截面回归查看</div></div>
+        </div>
+        <div class="macro-panel" style="flex:1;min-width:300px;">
+          <div class="macro-header">累计收益率曲线</div>
+          <div id="famaCumChart" style="height:250px;"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>截面信息 <span style="font-size:12px;color:#657282;">Daily Cross-Section Stats</span></h2>
+        <div id="famaDailyTable" style="max-height:200px;overflow-y:auto;"><div class="empty">运行后显示</div></div>
+      </div>
+    </div>
+
+    <!-- 机会发现 -->
+    <div class="sub-view" id="r-opportunity">
+      <div class="controls">
+        <button id="oppRefreshBtn">刷新</button>
+      </div>
+      <div class="metrics" id="oppMetrics"></div>
+      <div class="tableWrap"><div id="oppChart" style="width:100%;height:270px;"></div><table id="oppTable"></table></div>
+    </div>
+
+    <!-- 新闻情绪 -->
+    <div class="sub-view" id="r-news">
+      <div class="controls">
+        <label>代码<input id="newsSymbol" value="002714" /></label>
+        <button id="newsRefreshBtn">查询</button>
+      </div>
+      <div id="newsSentimentDisplay" class="panel" style="min-height:150px;"></div>
+      <div class="tableWrap"><table id="newsTable"><tbody><tr><td class="empty">输入代码后查询新闻情绪</td></tr></tbody></table></div>
+    </div>
+
+    <!-- 组合优化 -->
+    <div class="sub-view" id="r-optimizer">
+      <div class="controls">
+        <button id="optRefreshBtn">优化</button>
+        <button id="optEfficientFrontierBtn">有效前沿</button>
+        <label>目标年化收益<input id="optTargetReturn" value="0.15" style="width:70px;" /></label>
+        <label>风险容忍度<input id="optRiskTolerance" value="0.5" style="width:70px;" /></label>
+      </div>
+      <div class="macro-row" style="display:flex;gap:12px;flex-wrap:wrap;">
+        <div class="macro-panel" style="flex:1;min-width:240px;">
+          <div class="macro-header">均值-方差优化</div>
+          <div id="optMVResult">点击优化查看</div>
+        </div>
+        <div class="macro-panel" style="flex:1;min-width:240px;">
+          <div class="macro-header">等风险贡献(ERC)</div>
+          <div id="optERCResult">点击优化查看</div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>有效前沿 <span style="font-size:12px;color:#657282;">Efficient Frontier</span></h2>
+        <div id="optFrontierChart" style="height:300px;"></div>
+      </div>
+    </div>
+
+    <!-- 资产配置 -->
+    <div class="sub-view" id="r-allocation">
+      <div class="controls">
+        <label>标的 (逗号分隔)<input id="allocSymbols" value="600519,000858,002714,601899,002594,300750,600036" style="width:300px;" /></label>
+        <select id="allocObjective">
+          <option value="max_sharpe">最大夏普</option>
+          <option value="erc">等风险贡献</option>
+          <option value="min_vol">最小波动</option>
+        </select>
+        <button id="allocRunBtn">运行配置</button>
+      </div>
+      <div class="metrics" id="allocMetrics"></div>
+      <div class="macro-row" style="display:flex;gap:12px;flex-wrap:wrap;">
+        <div class="macro-panel" style="flex:1;min-width:260px;">
+          <div class="macro-header">权重分布</div>
+          <div id="allocWeights" style="height:250px;"></div>
+        </div>
+        <div class="macro-panel" style="flex:1;min-width:260px;">
+          <div class="macro-header">行业暴露</div>
+          <div id="allocSectors" style="height:250px;"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>压力测试 <span style="font-size:12px;color:#657282;">Stress Scenarios</span></h2>
+        <div id="allocStress" style="min-height:60px;"></div>
+      </div>
+      <div class="panel" style="margin-top:8px;">
+        <h2>风险分解 <span style="font-size:12px;color:#657282;">Component Risk Contribution</span></h2>
+        <table id="allocRiskTable"><tbody><tr><td>运行配置查看</td></tr></tbody></table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════ 监控与系统 ════════════════════════ -->
+  <!-- 滑点模型对比 -->
+  <section id="slip" class="view" aria-label="滑点模型对比">
+    <header class="topbar">
+      <h1><span class="crumb">工具</span>📊 滑点模型对比</h1>
+      <div class="sub-nav">
+        <button class="sub-nav-btn active" data-sub="slip-compare">冲击对比</button>
+      </div>
+    </header>
+    <div class="sub-view active" id="slip-compare">
+      <div class="controls">
+        <button id="slipCompareBtn">运行对比</button>
+        <label>标的<input id="slipSymbols" value="002714,600519,000858" style="width:200px;" /></label>
+      </div>
+      <div class="metrics" id="slipMetrics"></div>
+      <div class="panel" style="height:300px;"><div id="slipChart"></div></div>
+      <div class="panel" style="margin-top:8px;">
+        <h2>对比明细</h2>
+        <div class="tableWrap"><table id="slipTable"></table></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="ops" class="view">
+    <header class="topbar">
+      <h1><span class="crumb">监控与系统</span>📡 监控 · 报告 · AI</h1>
+      <div class="sub-nav">
+        <button class="sub-nav-btn active" data-sub="o-realtime">实时监控</button>
+        <button class="sub-nav-btn" data-sub="o-reports">报告查看</button>
+        <button class="sub-nav-btn " data-sub="o-ml-monitor">模型运行情况</button>
+        <button class="sub-nav-btn " data-sub="o-drift">漂移检测</button>
+        <button class="sub-nav-btn " data-sub="o-cache">数据缓存</button>
+        <button class="sub-nav-btn " data-sub="o-databass">数据基座</button>
+        <button class="sub-nav-btn " data-sub="o-featurestore">特征存储</button>
+        <button class="sub-nav-btn " data-sub="o-tasks">处理任务</button>
+        <button class="sub-nav-btn " data-sub="o-alerts">告警中心</button>
+        <button class="sub-nav-btn " data-sub="o-datahealth">数据健康</button>
+        <button class="sub-nav-btn " data-sub="o-cron">定时任务</button>
+        <button class="sub-nav-btn" data-sub="o-chat">AI 对话</button>
+      </div>
+    </header>
+
+    <!-- 实时监控 -->
+    <div class="sub-view active" id="o-realtime">
+      <div class="controls">
+        <label>轮询间隔(秒)<input id="rtInterval" type="number" value="150" min="30" max="600" /></label>
+        <label class="check"><input id="rtAutoRefresh" type="checkbox" checked />自动刷新</label>
+        <label class="check"><input id="rtSignalAlerts" type="checkbox" />信号触发后推送（默认关闭）</label>
+        <button id="rtRefreshBtn">刷新</button>
+        <button id="rtStartMonitorBtn" style="background:#1f7a5c;">启动后台监控</button>
+        <span style="color:var(--muted);font-size:12px;" id="rtNextPoll"></span>
+      </div>
+      <div class="metrics" id="rtMetrics"></div>
+      <div class="tableWrap"><table id="rtTable"></table></div>
+    </div>
+
+    <!-- 报告查看 -->
+    <div class="sub-view" id="o-reports">
+      <div class="controls">
+        <button id="reportsRefreshBtn">刷新列表</button><button type="button" onclick="window.open('/research_report.html','_blank','noopener')">统一深度研报</button>
+      </div>
+      <div class="panel" id="reportsList" style="min-height:180px;">加载报告列表...</div>
+      <div class="panel" id="reportContent" style="min-height:240px;display:none;"></div>
+    </div>
+
+    <!-- 数据缓存 -->
+    <div class="sub-view" id="o-cache">
+      <div class="controls">
+        <button id="cacheRefreshBtn">刷新缓存状态</button>
+        <button id="cacheRefreshAllBtn" style="background:#a04030;">🔄 刷新全部数据</button>
+      </div>
+      <div class="metrics" id="cacheMetrics"></div>
+      <div class="panel">
+        <h2>缓存健康 <span style="font-size:12px;color:#657282;">本地数据缓存情况</span></h2>
+        <div id="cacheEntries"><div class="empty">加载中...</div></div>
+      </div>
+    </div>
+
+    <!-- 数据基座 ( 2026-08-07) -->
+    <div class="sub-view" id="o-databass">
+      <div class="controls">
+        <button id="dbRefreshBtn">刷新体检</button>
+        <button id="segRefreshBtn">市场分层</button>
+        <span style="color:var(--muted);font-size:12px;">数据仓库 数据集更新情况 + 市场口径分层</span>
+      </div>
+      <div class="metrics" id="dbMetrics"></div>
+      <div class="panel">
+        <h2>数据集更新情况</h2>
+        <div class="tableWrap"><table id="dbTable"></table></div>
+      </div>
+      <div class="panel">
+        <h2>市场口径分层 <span style="font-size:12px;color:#657282;">主板/双创/北交所 + 风格</span></h2>
+        <div class="tableWrap" id="segTable"><div class="empty">点击「市场分层」加载（快照数据，零网络）</div></div>
+      </div>
+    </div>
+
+    <!-- 漂移检测 -->
+    <div class="sub-view" id="o-drift">
+      <div class="controls">
+        <button id="driftRefreshBtn">检测漂移</button>
+        <button id="driftRetrainBtn" style="background:#a04030;">🔄 增量训练</button>
+      </div>
+      <div class="metrics" id="driftMetrics"></div>
+      <div class="panel">
+        <h2>模型漂移检测 <span style="font-size:12px;color:#657282;">Drift Detection</span></h2>
+        <div id="driftStatus" style="min-height:100px;">加载中...</div>
+      </div>
+      <div class="panel">
+        <h2>漂移历史</h2>
+        <table id="driftHistoryTable"><tbody><tr><td>加载中...</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- 特征存储 -->
+    <div class="sub-view" id="o-featurestore">
+      <div class="controls">
+        <button id="fsRefreshBtn">刷新</button>
+      </div>
+      <div class="metrics" id="fsMetrics"></div>
+      <div class="panel">
+        <h2>特征存储统计 <span style="font-size:12px;color:#657282;">Feature Store Statistics</span></h2>
+        <table id="fsTable"><tbody><tr><td>加载中...</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- 模型运行情况 -->
+    <div class="sub-view" id="o-ml-monitor">
+      <div class="controls">
+        <button id="mlmRefreshBtn">刷新</button>
+        <button id="mlmRetrainBtn" style="background:#a04030;">🔄 重新训练</button>
+      </div>
+      <div class="macro-row" style="display:flex;gap:12px;flex-wrap:wrap;">
+        <div class="macro-panel" style="flex:1;min-width:280px;">
+          <div class="macro-header">模型文件</div>
+          <div id="mlmModelStatus"><div class="empty">加载中...</div></div>
+        </div>
+        <div class="macro-panel" style="flex:1;min-width:280px;">
+          <div class="macro-header">训练记录</div>
+          <div id="mlmTrainingLog"><div class="empty">加载中...</div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>特征重要性 Top30 <span style="font-size:12px;color:#657282;">Feature Importance</span></h2>
+        <div id="mlmFeatChart" style="height:300px;"><div class="empty">加载中...</div></div>
+      </div>
+      <div class="panel">
+        <h2>模型组合信息 <span style="font-size:12px;color:#657282;">集成学习</span></h2>
+        <div id="mlmEnsembleBody"><div class="empty">加载中...</div></div>
+      </div>
+    </div>
+
+    <!-- AI对话 -->
+    <div class="sub-view" id="o-chat">
+      <div class="controls">
+        <label>分析模型<input id="modelInput" value="chatgpt-plus/gpt-5.5" /></label>
+        <label>问题<input id="chatInput" placeholder="输入问题..." style="min-width:200px;" /></label>
+        <button id="askBtn">发送</button>
+      </div>
+      <div class="panel" style="min-height:300px;"><div id="chatLog"></div></div>
+    </div>
+
+    <!-- 处理任务看板  -->
+    <div class="sub-view" id="o-tasks">
+      <div class="controls">
+        <button id="refreshTasksBtn" class="btn-sm">🔄 刷新</button>
+        <span id="taskQueueStatus" style="color:#657282;font-size:13px;margin-left:12px;">加载中...</span>
+      </div>
+
+      <div class="macro-panel">
+        <div class="macro-header">📊 处理任务概览</div>
+        <div id="taskQueueStats" class="macro-grid">加载中...</div>
+      </div>
+
+      <div class="macro-panel">
+        <div class="macro-header">📋 最近任务</div>
+        <div id="taskQueueRecent" style="overflow-x:auto;">
+          <table class="risk-table" style="width:100%;">
+            <thead><tr><th>ID</th><th>类型</th><th>状态</th><th>创建时间</th><th>耗时</th><th>重试</th></tr></thead>
+            <tbody id="taskQueueTbody">
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 告警中心  -->
+    <div class="sub-view" id="o-alerts">
+      <div class="controls">
+        <button id="alertsRefreshBtn" class="btn-sm">🔄 刷新</button>
+        <span id="alertsMeta" style="color:#657282;font-size:13px;">加载中...</span>
+      </div>
+      <div class="macro-row" style="display:flex;gap:12px;flex-wrap:wrap;">
+        <div class="macro-panel" style="flex:1;min-width:300px;">
+          <div class="macro-header">📋 最近告警（签名 → 最后发送时间）</div>
+          <div id="alertsRecent" class="tableWrap" style="overflow-x:auto;"><div class="empty skeleton">加载中...</div></div>
+        </div>
+        <div class="macro-panel" style="flex:1;min-width:300px;">
+          <div class="macro-header">🛡️ 守护进程检查（health_guardian）</div>
+          <div id="alertsGuardian"><div class="empty skeleton">加载中...</div></div>
+        </div>
+      </div>
+      <div class="macro-panel">
+        <div class="macro-header">📡 告警去重状态（channel 最后发送）</div>
+        <div id="alertsDedup"><div class="empty skeleton">加载中...</div></div>
+      </div>
+    </div>
+
+    <!-- 数据健康  -->
+    <div class="sub-view" id="o-datahealth">
+      <div class="controls">
+        <button id="dhRefreshBtn" class="btn-sm">🔄 刷新</button>
+        <label class="check"><input id="dhStaleOnly" type="checkbox" />只看陈旧</label>
+        <input id="dhSearch" placeholder="筛选数据集名称…" style="max-width:220px;" />
+        <span id="dhMeta" style="color:#657282;font-size:13px;">加载中...</span>
+      </div>
+      <div class="macro-panel">
+        <div class="macro-header">📦 数据集新鲜度（较旧数据会标记提醒）</div>
+        <div id="dhTable" class="tableWrap" style="overflow-x:auto;"><div class="empty skeleton">加载中...</div></div>
+      </div>
+      <div class="macro-panel">
+        <div class="macro-header">📄 最新数据健康报告</div>
+        <div id="dhReport" style="max-height:420px;overflow-y:auto;font-size:13px;line-height:1.7;white-space:pre-wrap;word-break:break-word;"><div class="empty skeleton">加载中...</div></div>
+      </div>
+    </div>
+
+    <!-- 定时任务状态  -->
+    <div class="sub-view" id="o-cron">
+      <div class="controls">
+        <button id="cronRefreshBtn" class="btn-sm">🔄 刷新</button>
+        <span id="cronMeta" style="color:#657282;font-size:13px;">加载中...</span>
+      </div>
+      <div class="macro-panel">
+        <div class="macro-header">⏰ 自动更新任务（每 5 分钟更新）</div>
+        <div id="cronTable" class="tableWrap" style="overflow-x:auto;"><div class="empty skeleton">加载中...</div></div>
+      </div>
+      <div id="cronError" style="margin-top:8px;"></div>
+    </div>
+    <!-- 决策链+RAG  -->
+    <div class="sub-view" id="o-chain">
+      <div class="controls">
+        <select id="chainMode" style="background:#161b22;color:#e6edf3;border:1px solid #30363d;border-radius:6px;padding:6px 10px;">
+          <option value="intraday">盘中决策链</option>
+          <option value="after_close">盘后战报(龙虎榜+低估)</option>
+          <option value="battle_map">作战地图</option>
+        </select>
+        <button id="chainRefreshBtn" class="btn-sm">🔄 刷新</button>
+        <input id="ragQuery" placeholder="知识库检索: 低吸/情绪周期/因子IC..." style="background:#161b22;color:#e6edf3;border:1px solid #30363d;border-radius:6px;padding:6px 10px;width:280px;"/>
+        <button id="ragBtn" class="btn-sm">📚 检索</button>
+      </div>
+      <div class="macro-panel">
+        <div class="macro-header">🧭 决策链 <span id="chainMeta" style="color:#657282;font-size:12px;"></span></div>
+        <div id="chainContent" class="tableWrap" style="overflow-x:auto;"><div class="empty skeleton">加载中...</div></div>
+      </div>
+      <div class="macro-panel" style="margin-top:12px;">
+        <div class="macro-header">📚 研究方法依据<a href="/knowledge_base.html" target="_blank" style="float:right;font-size:12px;color:#58a6ff;">打开完整研究方法库→</a></div>
+        <div id="ragResults" style="padding:10px;"><div class="empty skeleton">输入主题，检索相关研究方法</div></div>
+      </div>
+      <div id="chainError" style="margin-top:8px;"></div>
+    </div>
+  </section>
+
+</main>
+<div id="apiCatalogModal" class="api-catalog-modal" hidden><div class="api-catalog-dialog" role="dialog" aria-modal="true" aria-labelledby="apiCatalogTitle"><div class="workbench-heading"><div><h2 id="apiCatalogTitle">数据来源与深入能力</h2><span class="data-meta">按业务域检索；数据来源和深入能力说明</span></div><button id="apiCatalogClose" class="btn-sm" title="关闭接口目录">×</button></div><div id="apiCatalogList"></div></div></div>
+<div id="stockAutocomplete" class="autocomplete-dropdown" style="display:none;"></div>
+<script src="/workbench.js?v=20260831-fast-global-v2"></script>
+<script src="/app.js?v=20260831-recap-fix-v3"></script>
+</body>
+</html>

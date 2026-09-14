@@ -16,4 +16,6 @@ quant_system/backtest.py、metrics_calculator.py、df_guard.py、rate_limiter.py
 
 ## 检查方法
 
+第二批追加：原前端 30 个页面/脚本/样式文件（知识库内嵌资料清空），overfitting_tests.py、task_dag.py、runtime_lock.py、snapshot_storage.py。未纳入 ECharts/Plotly 压缩包，缺完整配套许可。其余原后台与运维集成仍待迁移，不能称为全量完成。
+
 对发布文本作人工审阅，并执行文件类型、大小、密钥格式、硬编码凭据、本机路径和嵌套 Git 检查；测试使用合成数据，不导入原工作区。自动规则不能证明不存在所有形式的敏感信息，尤其不能单凭文件名判断策略敏感性。
