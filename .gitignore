@@ -6,8 +6,10 @@
 *.key
 token
 secrets/
-data/
-backtest_output/
+# Root-level runtime data only. Anchor these so nested source packages such as
+# quant_system/market_forecast/_support/data/ are not silently dropped.
+/data/
+/backtest_output/
 __pycache__/
 *.py[cod]
 .venv/
