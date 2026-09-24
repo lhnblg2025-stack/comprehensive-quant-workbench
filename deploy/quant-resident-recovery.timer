@@ -1,0 +1,10 @@
+[Unit]
+Description=Run quant catch-up shortly after boot
+
+[Timer]
+OnBootSec=3min
+Persistent=true
+Unit=quant-resident-recovery.service
+
+[Install]
+WantedBy=timers.target

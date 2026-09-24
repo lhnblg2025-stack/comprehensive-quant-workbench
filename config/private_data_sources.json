@@ -1,0 +1,57 @@
+{
+  "nasdaq_api": {
+    "api_key": "env:NASDAQ_API_KEY",
+    "label": "纳斯达克-api"
+  },
+  "tushare_pro": {
+    "api_key": "env:TUSHARE_API_KEY",
+    "label": "Tushare Pro / MCP token",
+    "mcp_url": "env:TUSHARE_MCP_URL"
+  },
+  "alpha_vantage": {
+    "api_key": "env:ALPHA_VANTAGE_API_KEY",
+    "label": "Alpha Vantage"
+  },
+  "finnhub": {
+    "api_key": "env:FINNHUB_API_KEY",
+    "base_url": "https://finnhub.io/api/v1",
+    "label": "Finnhub - 美股实时行情(免费版)",
+    "status": "已配置（美股AAPL等可用，A股不支持）"
+  },
+  "metals_api": {
+    "api_key": "YOUR_ACCESS_KEY",
+    "base_url": "https://metals-api.com/api/latest",
+    "label": "Metals API - 金银铂钯现货价格",
+    "status": "待填入真实 access_key"
+  },
+  "oilpriceapi": {
+    "api_key": "env:OILPRICEAPI_API_KEY",
+    "base_url": "https://api.oilpriceapi.com/v1",
+    "label": "OilPriceAPI - WTI/Brent 原油现货价格",
+    "status": "已配置"
+  },
+  "fcsapi": {
+    "api_key": "env:FCSAPI_API_KEY",
+    "base_url": "https://fcsapi.com/api-v3",
+    "label": "FCS API - 外汇/黄金现货/股票行情",
+    "status": "已配置（免费版 3次/分钟）"
+  },
+  "metals_dev": {
+    "api_key": "env:METALS_DEV_API_KEY",
+    "base_url": "https://api.metals.dev/v1/latest",
+    "label": "Metals.Dev - 黄金/白银/铂金/钯金/基本金属/LME",
+    "status": "已配置"
+  },
+  "commodities_api_mcp": {
+    "api_key": "env:COMMODITIES_API_MCP_API_KEY",
+    "base_url": "https://commodities-api.com/api",
+    "mcp_url": "https://commodities-api.mcp.commodities-api.com/mcp",
+    "label": "Commodities-API MCP - 700+商品",
+    "status": "免费版已到期，需付费"
+  },
+  "feishu_bot": {
+    "app_id": "env:FEISHU_APP_ID",
+    "app_secret": "env:FEISHU_APP_SECRET",
+    "chat_id": "env:FEISHU_CHAT_ID"
+  }
+}

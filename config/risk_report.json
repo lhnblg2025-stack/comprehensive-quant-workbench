@@ -1,0 +1,27 @@
+{
+  "timestamp": "2026-07-29T05:33:48.532832+08:00",
+  "position_count": 0,
+  "positions": [],
+  "var": {
+    "var": 0,
+    "cvar": 0,
+    "total_value": 0,
+    "note": "无持仓"
+  },
+  "concentration": {
+    "max_single": 0,
+    "top5": 0,
+    "industry_map": {},
+    "warnings": []
+  },
+  "drawdown": {
+    "current_drawdown": 0,
+    "max_drawdown": 0,
+    "note": "暂无净值数据"
+  },
+  "correlation": {
+    "matrix": {},
+    "avg_corr": 0,
+    "note": "持仓少于2只，无法计算相关性"
+  }
+}

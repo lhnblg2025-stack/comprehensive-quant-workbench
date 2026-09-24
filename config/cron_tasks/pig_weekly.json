@@ -1,0 +1,16 @@
+{
+  "task_id": "pig_weekly",
+  "scheduler_id": "fd9d7d87-65cc-4d9f-9dce-55a45e3d7541",
+  "name": "生猪周期周报",
+  "report_key": "pig_weekly",
+  "enabled": true,
+  "schedule": "30 17 * * 5",
+  "timezone": "Asia/Shanghai",
+  "command": [
+    "python3",
+    "${QUANT_WORKSPACE:-.}/scripts/generate_portfolio_weekly.py",
+    "--task",
+    "pig_weekly"
+  ],
+  "timeout_seconds": 1800
+}

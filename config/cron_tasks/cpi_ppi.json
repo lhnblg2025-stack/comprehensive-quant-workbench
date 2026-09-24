@@ -1,0 +1,12 @@
+{
+  "task_id": "cpi_ppi",
+  "name": "宏观-CPI-PPI数据解读",
+  "report_key": "cpi_ppi",
+  "command": [
+    "python3",
+    "${QUANT_WORKSPACE:-.}/scripts/generate_cpi_ppi_report.py",
+    "--out",
+    "{out}"
+  ],
+  "timeout_seconds": 1800
+}

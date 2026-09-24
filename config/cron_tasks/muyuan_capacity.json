@@ -1,0 +1,14 @@
+{
+  "task_id": "muyuan_capacity",
+  "name": "牧原股份-产能出清月度检查",
+  "report_key": "muyuan_capacity",
+  "command": [
+    "python3",
+    "${QUANT_WORKSPACE:-.}/scripts/generate_asset_weekly_report.py",
+    "--task",
+    "muyuan_capacity",
+    "--out",
+    "{out}"
+  ],
+  "timeout_seconds": 1800
+}

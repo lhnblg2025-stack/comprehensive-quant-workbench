@@ -1,0 +1,23 @@
+[Unit]
+Description=MuYun Tianshu after-close pipeline
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=quant
+Group=quant
+RuntimeDirectory=quant
+RuntimeDirectoryMode=0750
+WorkingDirectory=/opt/quant/current
+EnvironmentFile=-/etc/quant/quant.env
+Environment=QUANT_ROOT=/opt/quant/current
+Environment=QUANT_REPORT_ROOT=/opt/quant/shared/reports
+Environment=QUANT_LOCK_DIR=/run/quant
+ExecStart=/usr/bin/flock -n /run/quant/after-close.lock /opt/quant/current/scripts/run_after_close_pipeline.sh
+TimeoutStartSec=10800
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/opt/quant/current /opt/quant/shared /opt/quant/config /opt/quant/generated /opt/quant/logs /opt/quant/data_warehouse /run/quant

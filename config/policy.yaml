@@ -1,0 +1,35 @@
+# Policy Engine 集中魔法阈值配置
+#
+# 读取方式:
+#   from quant_system.policy import get_policy
+#   get_policy("veto.hard_coef", 0.3)
+#
+# 环境标签（ENV=prod|backtest|all，默认 all）:
+#   - 标量值默认对所有环境生效。
+#   - 如某策略值需要按环境区分，可将该值写成:
+#       key:
+#         all: <默认值>
+#         prod: <实盘值>
+#         backtest: <回测值>
+#   - get_policy 会优先取当前 ENV，其次取 all；均缺失时返回调用方 default。
+veto:
+  hard_coef: 0.3
+  soft_coef: 0.6
+  pe_hard: 0.95
+  pe_soft: 0.80
+  buffett_hard: 1.10
+  buffett_soft: 0.95
+  r1_zb_rate: 0.40
+  r1_zt_cnt: 30
+  r2_zb_rate: 0.30
+  r3_zt_cnt: 20
+  r4_zt_cnt: 30
+  r5_weight: 1
+  r6_big_loss: 50
+  r6_zb_rate: 0.30
+  r8_panic: -0.04
+temperature:
+  default_temp: 50
+multi_agent:
+  devils_min: 0.45
+  devils_max: 0.65

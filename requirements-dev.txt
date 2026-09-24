@@ -1,0 +1,4 @@
+# Development and CI toolchain. Runtime dependencies stay in requirements.lock.txt.
+pytest==9.1.1
+ruff>=0.9,<1
+mypy>=1.13,<2

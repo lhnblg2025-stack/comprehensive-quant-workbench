@@ -1,0 +1,12 @@
+{
+  "task_id": "customs",
+  "name": "宏观-海关进出口数据解读",
+  "report_key": "customs",
+  "command": [
+    "python3",
+    "${QUANT_WORKSPACE:-.}/scripts/generate_customs_report.py",
+    "--out",
+    "{out}"
+  ],
+  "timeout_seconds": 1800
+}

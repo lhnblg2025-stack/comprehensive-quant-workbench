@@ -1,3 +1,4 @@
+const validBusinessDate = (date) => String(date || '').match(/^20\d{2}-\d{2}-\d{2}$/);
 const state = { market: null, lastScan: [], lastSnapshot: null, lastBacktest: [], klineChart: null, radarChart: null, globalKlineChart: null, watchlist: [], config: null, period: 'daily', intraPeriod: '5', lastKlineSymbol: '002714' };
 const COLORS = {
   up:'#b42318', down:'#087443',

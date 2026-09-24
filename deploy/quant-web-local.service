@@ -1,0 +1,22 @@
+[Unit]
+Description=牧云天枢量化工作台（本机）
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/.openclaw/workspace
+Environment=QUANT_ROOT=%h/.openclaw/workspace
+Environment=QUANT_PYTHON=%h/anaconda3/bin/python3
+Environment=QUANT_WEB_BIND_HOST=127.0.0.1
+Environment=QUANT_WEB_PORT=8600
+Environment=QUANT_WEB_ALLOW_UNAUTH=1
+Environment=PYTHONUNBUFFERED=1
+ExecStart=%h/anaconda3/bin/python3 -u %h/.openclaw/workspace/quant_web/server.py 8600
+Restart=on-failure
+RestartSec=5
+KillSignal=SIGTERM
+TimeoutStopSec=20
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,122 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""生成《协同抑制关系测算方法文档.md》"""
+from pathlib import Path
+import pandas as pd
+
+OUT = Path("/mnt/hgfs/share/SDG-2/output/synergy")
+GOAL_NAMES = {
+    1: "无贫穷", 2: "零饥饿", 3: "良好健康", 4: "优质教育", 5: "性别平等",
+    6: "清洁饮水", 7: "清洁能源", 8: "体面工作", 9: "产业创新", 10: "减少不平等",
+    11: "可持续城市", 12: "负责任消费", 13: "气候行动", 14: "水下生物",
+    15: "陆地生物", 16: "和平正义", 17: "伙伴关系",
+}
+
+cls = pd.read_csv(OUT / "sdg_synergy_classification.csv")
+
+lines = []
+lines.append("# 协同抑制关系测算方法文档（SDG 交互作用）")
+lines.append("")
+lines.append("> 生成时间：2026-08-20　|　任务2：协同抑制关系的测算（机器学习）")
+lines.append("> 输入：`output/sdg_scores_standardized.csv`（任务1- 计算的 17 个 SDG 得分，0-100）")
+lines.append("> 脚本：`workspace/scripts/sdg2/sdg_synergy_analysis.py`　|　输出：`output/synergy/`")
+lines.append("")
+lines.append("## 一、研究问题")
+lines.append("")
+lines.append("SDG 之间不是孤立的：推进一个目标可能**协同**（synergy）促进另一个目标，也可能**抑制**（trade-off/inhibition）损害另一个目标。")
+lines.append("本测算用三层证据识别 17 个 SDG 两两之间的协同/抑制关系，为政策排序（优先推进哪些目标可产生正外部性、避免哪些冲突）提供依据。")
+lines.append("")
+lines.append("## 二、数据与预处理")
+lines.append("")
+lines.append("| 项 | 内容 |")
+lines.append("|---|---|")
+lines.append("| 面板 | 134 国（发展中国家，含 SDG17）× 2011-2020 |")
+lines.append("| 变量 | 17 个 SDG 得分（0-100，任务1- 产出） |")
+lines.append("| 预处理 | **国家内去均值（within 变换）**：减去各国 10 年均值，消除国别水平差异，聚焦“各国自身进步过程”中 SDG 间的动态互动 |")
+lines.append("| 原因 | 原始水平相关会混入国家发展水平效应（富国什么都好），within 变换才是真正的“协同/抑制”信号 |")
+lines.append("")
+lines.append("## 三、三层证据方法")
+lines.append("")
+lines.append("### A. Pearson 相关（基线）")
+lines.append("")
+lines.append("- 计算 within 变换后 17×17 相关矩阵（`sdg_pairwise_corr_within.csv`）")
+lines.append("- 原始值相关矩阵另存（`sdg_pairwise_corr_raw.csv`）作对照")
+lines.append("- 阈值：|corr| ≥ 0.3 视为有实质关联")
+lines.append("")
+lines.append("### B. 机器学习：随机森林 + SHAP（主方法）")
+lines.append("")
+lines.append("- 对每个目标 SDG_j 训练一个随机森林（500 棵树，max_depth=5）：")
+lines.append("  `SDG_j ~ 其余16个SDG（within 值）`")
+lines.append("- 训练/验证：2011-2018 训练，2019-2020 验证（时间顺序，防泄漏）")
+lines.append("- 用 **SHAP（TreeExplainer）** 分解每个源 SDG_i 对 SDG_j 预测的贡献：")
+lines.append("  - **方向** = 平均 SHAP 值的符号（正→协同，负→抑制）")
+lines.append("  - **强度** = 平均 |SHAP|，按目标列内最大=1 归一化（0-1）")
+lines.append("- 产出：`sdg_ml_shap_direction.csv`（±1 方向矩阵）、`sdg_ml_shap_strength.csv`（0-1 强度矩阵）")
+lines.append("")
+lines.append("### C. 固定效应 OLS 稳健性")
+lines.append("")
+lines.append("- 逐对回归：`SDG_j ~ SDG_i`，双向去均值（国家+年份固定效应）")
+lines.append("- 产出系数 beta、t 值、p 值（`sdg_fe_ols.csv`）")
+lines.append("- p<0.05 视为显著，用系数符号交叉验证 ML 方向")
+lines.append("")
+lines.append("## 四、协同/抑制判定规则")
+lines.append("")
+lines.append("| 类别 | 规则 |")
+lines.append("|---|---|")
+lines.append("| **强协同/强抑制** | 以下证据 ≥2 项 且方向一致：①\\|within corr\\|≥0.3 ②SHAP 方向非零且强度≥0.3 ③FE 显著（p<0.05） |")
+lines.append("| **弱协同/弱抑制** | 证据 ≥1 项且方向一致 |")
+lines.append("| **中性** | 证据不足或方向矛盾 |")
+lines.append("")
+lines.append("## 五、结果摘要")
+lines.append("")
+n_syn = (cls['relation']=='协同').sum()
+n_inh = (cls['relation']=='抑制').sum()
+n_neu = (cls['relation']=='中性').sum()
+lines.append(f"- 协同关系：**{n_syn}** 对（强 {len(cls[(cls['relation']=='协同')&(cls['confidence']=='强')])} / 弱 {len(cls[(cls['relation']=='协同')&(cls['confidence']=='弱')])}）")
+lines.append(f"- 抑制关系：**{n_inh}** 对（强 {len(cls[(cls['relation']=='抑制')&(cls['confidence']=='强')])} / 弱 {len(cls[(cls['relation']=='抑制')&(cls['confidence']=='弱')])}）")
+lines.append(f"- 中性：**{n_neu}** 对")
+lines.append("")
+lines.append("### 5.1 强抑制关系（政策冲突警示）")
+lines.append("")
+lines.append("| 源→目标 | 关系 | within相关 | SHAP强度 | FE p值 | 解读 |")
+lines.append("|---|---|---|---|---|---|")
+rows_strong_inh = cls[(cls['relation']=='抑制')&(cls['confidence']=='强')].sort_values('pearson_within')
+inh_explain = {
+    ('SDG7','SDG12'): '清洁能源生产扩张与负责任消费（如资源集约）之间的短期张力',
+    ('SDG9','SDG14'): '工业化/基础设施建设对海洋生态的潜在压力（经典权衡）',
+    ('SDG9','SDG10'): '产业升级过程中可能伴随的收入分配压力',
+}
+for _, r in rows_strong_inh.iterrows():
+    key = (r['source'], r['target'])
+    lines.append(f"| {r['source']}→{r['target']} | 抑制 | {r['pearson_within']:+.2f} | {r['shap_strength']:.2f} | {r['fe_p']:.4f} | {inh_explain.get(key,'')} |")
+lines.append("")
+lines.append("### 5.2 强协同关系（政策杠杆点）")
+lines.append("")
+lines.append("| 源→目标 | 关系 | within相关 | SHAP强度 | FE p值 |")
+lines.append("|---|---|---|---|---|")
+rows_strong_syn = cls[(cls['relation']=='协同')&(cls['confidence']=='强')].sort_values('pearson_within', ascending=False)
+for _, r in rows_strong_syn.head(15).iterrows():
+    lines.append(f"| {r['source']}→{r['target']} | 协同 | {r['pearson_within']:+.2f} | {r['shap_strength']:.2f} | {r['fe_p']:.4f} |")
+lines.append("")
+lines.append("## 六、输出文件")
+lines.append("")
+lines.append("| 文件 | 内容 |")
+lines.append("|---|---|")
+lines.append("| `sdg_synergy_classification.csv` | 272 对关系全表：相关/SHAP方向强度/FE系数p值/分类/证据 |")
+lines.append("| `sdg_pairwise_corr_raw.csv` / `_within.csv` | 相关矩阵（原始/国家内） |")
+lines.append("| `sdg_ml_shap_direction.csv` / `_strength.csv` | SHAP 方向（±1）/强度（0-1）矩阵 |")
+lines.append("| `sdg_fe_ols.csv` | 固定效应 OLS 面板回归结果 |")
+lines.append("| `sdg_synergy_heatmap_corr.png` | 国家内相关热力图 |")
+lines.append("| `sdg_synergy_heatmap_shap.png` | SHAP 方向×强度热力图 |")
+lines.append("")
+lines.append("## 七、使用注意事项")
+lines.append("")
+lines.append("1. **关联不等于因果**：本测算识别统计关联方向，政策因果需进一步设计（如工具变量/自然实验）。")
+lines.append("2. **时间动态**：当前为同期关系；如需滞后因果（SDG_i 领先一期对 SDG_j 的影响）可扩展滞后项。")
+lines.append("3. **样本**：仅发展中国家（134 国），结论外推至发达国家需谨慎。")
+lines.append("4. **SDG14 内陆国**：内陆国 SDG14 仅基于 14.a.1 指标，其与其他 SDG 的关联解释受限。")
+lines.append("5. **随机森林 SHAP 方向**：对非线性关系，平均 SHAP 符号是净效应方向；局部可看强度分布。")
+lines.append("")
+
+(OUT / "协同抑制关系测算方法文档.md").write_text("\n".join(lines), encoding="utf-8")
+print("✅ 文档已生成:", OUT / "协同抑制关系测算方法文档.md")

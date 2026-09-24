@@ -1,0 +1,12 @@
+{
+  "task_id": "social_finance_m2",
+  "name": "宏观-社融M2数据解读",
+  "report_key": "social_finance_m2",
+  "command": [
+    "python3",
+    "${QUANT_WORKSPACE:-.}/scripts/generate_social_finance_m2_report.py",
+    "--out",
+    "{out}"
+  ],
+  "timeout_seconds": 1800
+}

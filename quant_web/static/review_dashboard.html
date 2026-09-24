@@ -139,47 +139,27 @@ th{color:var(--sub);font-weight:500}
 let CUR = '';
 async function api(path){ return window.quantApiWait(path, {}, 60, 1000); }
 function fmt(n, d=2){
-  if(n==null||n===''||!Number.isFinite(Number(n))) return '-';
-  n=Number(n);
+  if(n==null||isNaN(n)) return '-';
   const s = Math.abs(n)>=1e8 ? (n/1e8).toFixed(1)+'亿' : Math.abs(n)>=1e4 ? (n/1e4).toFixed(1)+'万' : n.toFixed(d);
   return s;
 }
 function pctStr(v){ if(v==null||isNaN(v))return '-'; return (v>0?'+':'')+Number(v).toFixed(2)+'%'; }
-function escapeHtml(v){ return String(v??'').slice(0,20000).replace(/[<>&"']/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c])); }
-function rows(v){return Array.isArray(v)?v.filter(x=>x!=null).slice(0,1000):[];}
+function escapeHtml(v){ return String(v??'').replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c])); }
 
-let loadSequence = 0;
-function reviewHealthLabel(h){
-  if(!h || typeof h !== 'object' || Array.isArray(h) || typeof h.overall_ok !== 'boolean'
-      || (h.degraded != null && !Array.isArray(h.degraded))
-      || (h.degraded_datasets != null && !Array.isArray(h.degraded_datasets))) return '⚠️ 数据健康未知';
-  if(h.error || h.check_failed || (h.status != null && !['ok','healthy','pass'].includes(String(h.status).toLowerCase()))) return '⚠️ 数据健康不可用';
-  const degraded=[...rows(h.degraded),...rows(h.degraded_datasets)];
-  if(h.overall_ok === true && !degraded.length) return '✅ 数据健康';
-  return `⚠️ 数据降级 ${escapeHtml(degraded.length)} 项`;
-}
 async function load(date){
-  if(!document.getElementById('meta'))return;
-  const sequence = ++loadSequence;
   CUR = date||'';
-  document.getElementById('meta').textContent='数据健康未知 · 正在读取';
-  const dateContext=document.getElementById('dateContext');if(dateContext)dateContext.textContent='正在读取所选日期，本轮来源日期尚未确认';
-  let d;
-  try{d=await api('/api/review/fusion' + (date?'?date='+date:''));}
-  catch(e){if(sequence!==loadSequence)return;document.getElementById('meta').textContent='数据健康不可用 · 读取失败';showErr(e.message||'加载失败');return;}
-  if(sequence!==loadSequence)return;
-  if(!d || d.ok!==true || !d.data || typeof d.data!=='object' || Array.isArray(d.data)){
-    document.getElementById('meta').textContent='数据健康不可用 · 返回结构异常';showErr(d?.error||'加载失败');return;
-  }
+  const d = await api('/api/review/fusion' + (date?'?date='+date:''));
+  if(!d.ok){ showErr(d.error||'加载失败'); return; }
   hideErr();
   const x = d.data;
   document.getElementById('meta').textContent =
-    `📅 ${escapeHtml(x.date||'')} · 生成 ${escapeHtml(String(x.generated_at||'').replace('T',' ').slice(0,19))} · ` + reviewHealthLabel(x.health);
+    `📅 ${x.date||''} · 生成 ${(x.generated_at||'').replace('T',' ').slice(0,19)}` +
+    (x.health && !x.health.overall_ok ? ` · ⚠️ 数据降级 ${(x.health.degraded||[]).length} 项` : ' · ✅ 数据健康');
   const context = document.getElementById('dateContext');
   if (context) {
     const sourceDates = x.source_dates || x.decision?.source_dates || {};
-    const pairs = Object.entries(sourceDates).filter(([, value]) => value).slice(0, 8).map(([name, value]) => `${escapeHtml(name)}: ${escapeHtml(String(value).slice(0,10))}`);
-    context.textContent = `报告日 ${escapeHtml(x.date || '-')} · 实际来源日期 ${pairs.join(' · ') || '未提供'} · 当前行情/舆情仅作为明确标注的参考，不改写历史结论。`;
+    const pairs = Object.entries(sourceDates).filter(([, value]) => value).slice(0, 8).map(([name, value]) => `${name}: ${String(value).slice(0,10)}`);
+    context.textContent = `报告日 ${x.date || '-'} · 实际来源日期 ${pairs.join(' · ') || '未提供'} · 当前行情/舆情仅作为明确标注的参考，不改写历史结论。`;
   }
   renderStats(x);
   renderVerdict(x);
@@ -204,8 +184,8 @@ async function load(date){
   const pick = document.getElementById('datePick'); if(pick) pick.value = x.date||'';
 }
 
-function showErr(m){ const e=document.getElementById('err'); if(!e)return;e.style.display='block'; e.textContent='❌ '+m; }
-function hideErr(){ const e=document.getElementById('err');if(e)e.style.display='none'; }
+function showErr(m){ const e=document.getElementById('err'); e.style.display='block'; e.textContent='❌ '+m; }
+function hideErr(){ document.getElementById('err').style.display='none'; }
 
 function renderStats(x){
   const t = x.temperature||{}, emo=t.emotion||{}, fund=t.fund||{};
@@ -219,7 +199,7 @@ function renderStats(x){
     ['决策', bm.action_card||'-', bm.action_card==='进攻'?'up':(bm.action_card==='防守'?'down':'')],
   ];
   document.getElementById('stats').innerHTML = items.map(i=>`
-    <div class="stat"><div class="l">${escapeHtml(i[0])}</div><div class="v ${escapeHtml(i[2]||'')}">${escapeHtml(i[1])}${escapeHtml(i[3]||'')}</div></div>`).join('');
+    <div class="stat"><div class="l">${i[0]}</div><div class="v ${i[2]||''}">${i[1]}${i[3]||''}</div></div>`).join('');
 }
 
 function renderVerdict(x){
@@ -229,22 +209,22 @@ function renderVerdict(x){
   const dimOrder = [['technical','技术面'],['emotion','情绪面'],['fund','资金面'],['factor','因子面'],['mainline','主线面'],['overseas','海外面']];
   const dimHtml = dimOrder.filter(([k])=>dims[k]).map(([k,cn])=>{
     const v = dims[k]; const cls = v.score>=60?'ok':(v.score<45?'warn':'');
-    return `<span class="chip ${cls}" title="${escapeHtml(v.note||'')}">${escapeHtml(cn)} ${escapeHtml(v.score)}分</span>`;}).join('');
+    return `<span class="chip ${cls}" title="${v.note||''}">${cn} ${v.score}分</span>`;}).join('');
   const d = x.decision||{};
-  const dz = d['定调']||{}, mz = d['主线研判']||{}, op = d['操作清单']||{}, rp = rows(d['风险预案']);
-  const attack = rows(op.attack), observe = rows(op.observe), avoid = rows(op.avoid);
+  const dz = d['定调']||{}, mz = d['主线研判']||{}, op = d['操作清单']||{}, rp = d['风险预案']||[];
+  const attack = op.attack||[], observe = op.observe||[], avoid = op.avoid||[];
   let html = `<div class="row">
-      <div>明日定调</div><div class="act ${escapeHtml(dz.posture&&dz.posture.includes('进攻')?'up':(dz.posture&&dz.posture.includes('防守')?'down':''))}">${escapeHtml(dz.posture||bm.action_card||'?')}</div>
-      <div class="pos">建议仓位 <b>${escapeHtml(dz.position||bm.position_range||'?')}</b>${dz.fund_adj?` · ${escapeHtml(dz.fund_adj)}`:''}</div>
+      <div>明日定调</div><div class="act ${dz.posture&&dz.posture.includes('进攻')?'up':(dz.posture&&dz.posture.includes('防守')?'down':'')}">${dz.posture||bm.action_card||'?'}</div>
+      <div class="pos">建议仓位 <b>${dz.position||bm.position_range||'?'}</b>${dz.fund_adj?` · ${dz.fund_adj}`:''}</div>
     </div>
-    ${fus.total!=null?`<div style="margin-top:8px">融合评分 <b style="font-size:18px" class="${escapeHtml(fus.total>=68?'up':(fus.total<45?'down':''))}">${escapeHtml(fus.total)}</b>/100</div>
+    ${fus.total!=null?`<div style="margin-top:8px">融合评分 <b style="font-size:18px" class="${fus.total>=68?'up':(fus.total<45?'down':'')}">${fus.total}</b>/100</div>
     <div style="margin-top:6px">${dimHtml}</div>`:''}
-    <div class="pos" style="margin-top:6px">依据: ${escapeHtml(dz.basis||'')}</div>`;
-  if(mz.main){ html += `<div style="margin-top:8px">主线: <b>${escapeHtml(mz.main)}</b> <span class="tag ${escapeHtml(mz.quality==='强'?'main':'sub2')}">${escapeHtml(mz.quality)}</span></div>`; }
-  if(attack.length){ html += `<div style="margin-top:8px" class="sub">✅ 进攻清单</div><ul>${attack.slice(0,5).map(a=>`<li>${escapeHtml(a.name)} <span class="tag main">${escapeHtml(a.type)}</span>${escapeHtml(a.action)}</li>`).join('')}</ul>`; }
-  if(avoid.length){ html += `<div style="margin-top:6px" class="sub">⛔ 规避</div><ul>${avoid.slice(0,3).map(a=>`<li class="warn-text">${escapeHtml(a.name)} ${escapeHtml(a.action)}</li>`).join('')}</ul>`; }
-  if(rp.length){ html += `<div style="margin-top:6px" class="sub">🚨 风险预案</div><ul>${rp.slice(0,4).map(r=>`<li>若 ${escapeHtml(r.trigger)} → <b>${escapeHtml(r.action)}</b></li>`).join('')}</ul>`; }
-  if(bm.error){ html += `<div class="warn" style="margin-top:8px">⚠️ ${escapeHtml(bm.error)}</div>`; }
+    <div class="pos" style="margin-top:6px">依据: ${dz.basis||''}</div>`;
+  if(mz.main){ html += `<div style="margin-top:8px">主线: <b>${mz.main}</b> <span class="tag ${mz.quality==='强'?'main':'sub2'}">${mz.quality}</span></div>`; }
+  if(attack.length){ html += `<div style="margin-top:8px" class="sub">✅ 进攻清单</div><ul>${attack.slice(0,5).map(a=>`<li>${a.name} <span class="tag main">${a.type}</span>${a.action}</li>`).join('')}</ul>`; }
+  if(avoid.length){ html += `<div style="margin-top:6px" class="sub">⛔ 规避</div><ul>${avoid.slice(0,3).map(a=>`<li class="warn-text">${a.name} ${a.action}</li>`).join('')}</ul>`; }
+  if(rp.length){ html += `<div style="margin-top:6px" class="sub">🚨 风险预案</div><ul>${rp.slice(0,4).map(r=>`<li>若 ${r.trigger} → <b>${r.action}</b></li>`).join('')}</ul>`; }
+  if(bm.error){ html += `<div class="warn" style="margin-top:8px">⚠️ ${bm.error}</div>`; }
   document.getElementById('verdictTop').innerHTML = html;
 }
 
@@ -257,10 +237,10 @@ function renderModelVerdict(x){
     return;
   }
   const confidence=Number(v.confidence);
-  const confText=Number.isFinite(confidence)?`${escapeHtml((confidence*100).toFixed(0))}%`:'未标定';
-  el.innerHTML=`<div>共识 <b style="font-size:18px">${escapeHtml(v.consensus)}</b> · ${escapeHtml(v.votes??0)} 个有效投票</div>
+  const confText=Number.isFinite(confidence)?`${(confidence*100).toFixed(0)}%`:'未标定';
+  el.innerHTML=`<div>共识 <b style="font-size:18px">${escapeHtml(v.consensus)}</b> · ${v.votes??0} 个有效投票</div>
     <div class="sub">共识置信度 ${confText} · 数据日 ${escapeHtml(v.date||x.date||'-')}</div>
-    ${escapeHtml(Number.isFinite(confidence)&&confidence<0.5?'<div class="warn" style="margin-top:6px">分歧较大：只作为风险参考，不单独触发交易。</div>':'')}`;
+    ${Number.isFinite(confidence)&&confidence<0.5?'<div class="warn" style="margin-top:6px">分歧较大：只作为风险参考，不单独触发交易。</div>':''}`;
 }
 
 function renderTemp(x){
@@ -283,8 +263,8 @@ function renderTemp(x){
     title:{text:emo.stage_cn||'情绪?',left:'center',top:'62%',textStyle:{fontSize:13,color:'#8ea0b8'}}
   });
   document.getElementById('tempTxt').innerHTML = `
-    <div>情绪阶段 <b>${escapeHtml(emo.stage_cn||'?')}</b>（置信${escapeHtml(((emo.confidence||0)*100).toFixed(0))}%）· 涨停 <b class="up">${escapeHtml(emo.zt_cnt??'-')}</b> 家 · 最高 <b>${escapeHtml(emo.max_board??'-')}</b>板</div>
-    <div style="margin-top:4px">资金合力 <b>${escapeHtml(fund.force_index??'-')}</b>：游资 <b class="${escapeHtml(Number(fund.youzi_net)>0?'up':'down')}">${escapeHtml(fmt(fund.youzi_net,0))}</b> · 机构 ${escapeHtml(fmt(fund.jg_net,0))}<span class="sub">（北向已停更，改看下方舆情情绪指标）</span></div>`;
+    <div>情绪阶段 <b>${emo.stage_cn||'?'}</b>（置信${((emo.confidence||0)*100).toFixed(0)}%）· 涨停 <b class="up">${emo.zt_cnt??'-'}</b> 家 · 最高 <b>${emo.max_board??'-'}</b>板</div>
+    <div style="margin-top:4px">资金合力 <b>${fund.force_index??'-'}</b>：游资 <b class="${Number(fund.youzi_net)>0?'up':'down'}">${fmt(fund.youzi_net,0)}</b> · 机构 ${fmt(fund.jg_net,0)}<span class="sub">（北向已停更，改看下方舆情情绪指标）</span></div>`;
 }
 
 function renderGate(x){
@@ -293,33 +273,33 @@ function renderGate(x){
   if(!g.total){ el.innerHTML='<div class="warn">数据质量门未运行，当前结论不能视为完整。</div>'; return; }
   const cls = g.score>=70?'ok':(g.score>=50?'warn':'bad');
   const decGate = (x.decision&&x.decision.fusion&&x.decision.fusion.gate)||{};
-  const expired=rows(g.expired_items);
-  const stale=rows(g.stale_items);
-  const missing=rows(g.missing_items);
-  const legacy=rows(g.not_fresh).filter(i=>Number(i.lag)>=0);
+  const expired=g.expired_items||[];
+  const stale=g.stale_items||[];
+  const missing=g.missing_items||[];
+  const legacy=(g.not_fresh||[]).filter(i=>Number(i.lag)>=0);
   const delayed=(expired.length||stale.length)?expired.concat(stale):legacy;
-  el.innerHTML = `<div>决策数据覆盖 <b style="font-size:20px" class="${cls}">${escapeHtml(g.score)}</b>/100 · ${escapeHtml(g.fresh)}/${escapeHtml(g.total)} 域可用</div>
-    ${decGate.penalty?`<div class="warn">已使融合评分降低 ${escapeHtml(decGate.penalty)} 分</div>`:''}
-    ${delayed.length?`<div class="sub" style="margin-top:6px">需要更新</div><ul>${delayed.slice(0,4).map(i=>`<li>${escapeHtml(i.dir)} <span>${escapeHtml(i.lag)}个交易日未更新</span></li>`).join('')}</ul>`:''}
-    ${missing.length?`<div class="sub" style="margin-top:6px">另有 ${escapeHtml(missing.length)} 个非关键/未接入域无数据，不逐项刷屏。</div>`:''}
-    ${escapeHtml(!delayed.length&&!missing.length?'<div class="ok">关键数据均在有效期内</div>':'')}`;
+  el.innerHTML = `<div>决策数据覆盖 <b style="font-size:20px" class="${cls}">${g.score}</b>/100 · ${g.fresh}/${g.total} 域可用</div>
+    ${decGate.penalty?`<div class="warn">已使融合评分降低 ${decGate.penalty} 分</div>`:''}
+    ${delayed.length?`<div class="sub" style="margin-top:6px">需要更新</div><ul>${delayed.slice(0,4).map(i=>`<li>${escapeHtml(i.dir)} <span>${i.lag}个交易日未更新</span></li>`).join('')}</ul>`:''}
+    ${missing.length?`<div class="sub" style="margin-top:6px">另有 ${missing.length} 个非关键/未接入域无数据，不逐项刷屏。</div>`:''}
+    ${!delayed.length&&!missing.length?'<div class="ok">关键数据均在有效期内</div>':''}`;
 }
 function renderDataBase(x){
   const db = x.data_base||{};
   const mk = db.macro||{}, hk = db.hot||{}, ik = db.institutional||db.inst||{}, dk = db.industry||{};
   let html = '<div class="sub">宏观·热榜·机构·行业</div>';
-  if(rows(mk.items).length) html += `<div style="padding:3px 0">📊 ${rows(mk.items).slice(0,4).map(i=>`${escapeHtml(i.name)}=${escapeHtml(i.value)}`).join(' · ')}</div>`;
-  if(rows(hk.top).length) html += `<div style="padding:3px 0">🔥 热榜 涨${escapeHtml(hk.up_n)}跌${escapeHtml(hk.down_n)} ${rows(hk.top).slice(0,4).map(t=>escapeHtml(String(t.code||'').replace(/^(SH|SZ)/,''))).join(',')}</div>`;
-  if(rows(ik.new_entries).length) html += `<div style="padding:3px 0">🏦 机构新进 ${rows(ik.new_entries).slice(0,5).map(e=>escapeHtml(e.name)).join(',')}</div>`;
-  if(rows(dk.strong).length) html += `<div style="padding:3px 0">📈 强行业 ${rows(dk.strong).slice(0,5).map(s=>`${escapeHtml(s.name)}(${escapeHtml(s.chg>0?'+':'')}${escapeHtml(s.chg)}%)`).join(',')}</div>`;
+  if((mk.items||[]).length) html += `<div style="padding:3px 0">📊 ${(mk.items||[]).slice(0,4).map(i=>`${i.name}=${i.value}`).join(' · ')}</div>`;
+  if((hk.top||[]).length) html += `<div style="padding:3px 0">🔥 热榜 涨${hk.up_n}跌${hk.down_n} ${(hk.top||[]).slice(0,4).map(t=>t.code.replace(/^(SH|SZ)/,'')).join(',')}</div>`;
+  if((ik.new_entries||[]).length) html += `<div style="padding:3px 0">🏦 机构新进 ${(ik.new_entries||[]).slice(0,5).map(e=>e.name).join(',')}</div>`;
+  if((dk.strong||[]).length) html += `<div style="padding:3px 0">📈 强行业 ${(dk.strong||[]).slice(0,5).map(s=>`${s.name}(${s.chg>0?'+':''}${s.chg}%)`).join(',')}</div>`;
   const sty = db.style||{};
-  if(sty.note) html += `<div style="padding:3px 0">🎨 ${escapeHtml(sty.note)}</div>`;
+  if(sty.note) html += `<div style="padding:3px 0">🎨 ${sty.note}</div>`;
   const nm = db.north_margin||{};
-  if(nm.note) html += `<div style="padding:3px 0">💧 ${escapeHtml(nm.note)}</div>`;
+  if(nm.note) html += `<div style="padding:3px 0">💧 ${nm.note}</div>`;
   const ev = db.event||{};
-  if(ev.note) html += `<div style="padding:3px 0">📅 ${escapeHtml(ev.note)}</div>`;
+  if(ev.note) html += `<div style="padding:3px 0">📅 ${ev.note}</div>`;
   const cp = db.concept||{};
-  if(cp.note) html += `<div style="padding:3px 0">🌀 ${escapeHtml(cp.note)}</div>`;
+  if(cp.note) html += `<div style="padding:3px 0">🌀 ${cp.note}</div>`;
   document.getElementById('dbTxt').innerHTML = html || '<div class="sub">无基座数据</div>';
 }
 function renderFund(x){
@@ -327,101 +307,94 @@ function renderFund(x){
   const el = document.getElementById('fundTxt');
   if(!fd.picker && !fd.ann){ el.innerHTML='<div class="sub">财报数据加载中/缺失</div>'; return; }
   let html = '';
-  if(rows(fd.picker).length) html += `<div class="sub">财报选股(高ROE+高增+低负债)</div>` + rows(fd.picker).slice(0,4).map(pk=>`<div>${escapeHtml(pk.code)} ROE${escapeHtml(pk.roe)}% 增速${escapeHtml(pk.grow)}% 负债${escapeHtml(pk.lev)}% EPS${escapeHtml(pk.eps)}</div>`).join('');
-  if(rows(fd.valuation).length) html += `<div class="sub" style="margin-top:4px">估值</div><div>${rows(fd.valuation).slice(0,4).map(v=>`${escapeHtml(v.code)}(PE${escapeHtml(v.pe||'-')}/PB${escapeHtml(v.pb||'-')})`).join(' ')}</div>`;
-  if(rows(fd.ann?.items).length) html += `<div class="sub" style="margin-top:4px">公告</div><div>${rows(fd.ann.items).slice(0,3).map(a=>`${escapeHtml(a.name)}:${escapeHtml(a.type)}`).join(' | ')}</div>`;
+  if((fd.picker||[]).length) html += `<div class="sub">财报选股(高ROE+高增+低负债)</div>` + fd.picker.slice(0,4).map(pk=>`<div>${pk.code} ROE${pk.roe}% 增速${pk.grow}% 负债${pk.lev}% EPS${pk.eps}</div>`).join('');
+  if((fd.valuation||[]).length) html += `<div class="sub" style="margin-top:4px">估值</div><div>${fd.valuation.slice(0,4).map(v=>`${v.code}(PE${v.pe||'-'}/PB${v.pb||'-'})`).join(' ')}</div>`;
+  if((fd.ann||{}).items) html += `<div class="sub" style="margin-top:4px">公告</div><div>${fd.ann.items.slice(0,3).map(a=>`${a.name}:${a.type}`).join(' | ')}</div>`;
   el.innerHTML = html || '<div class="sub">无财报数据</div>';
 }
 function renderChanDepth(x){
   const c = x.chan||{}, d = x.depth||{};
   const ct = document.getElementById('chanTxt');
   if(c.note) {
-    const points=rows(c.buy_points);
+    const points=c.buy_points||[];
     ct.innerHTML = `<div><b>${escapeHtml(c.scenario||c.cur_pos||'结构观察')}</b> · ${escapeHtml(c.action||c.operation||'等待确认')}</div>
       <div style="margin-top:5px">确认：${escapeHtml(c.confirm||'-')}</div>
       <div>失效：<span class="warn">${escapeHtml(c.invalidation||'-')}</span></div>
       ${points.length?`<div class="ok">买点信号：${points.slice(0,2).map(p=>escapeHtml(p['信号']||p.signal||'')).join('、')}</div>`:'<div class="sub">当前无买点信号，不因“中枢内震荡”直接开仓。</div>'}
-      <details style="margin-top:6px"><summary class="sub">查看结构数据</summary><div class="sub">${escapeHtml(c.note)} · 中枢 ${escapeHtml(c.cur_zs||'-')} · 笔${fmt(c.bis,0)} 分型${fmt(c.fractals,0)}</div></details>`;
+      <details style="margin-top:6px"><summary class="sub">查看结构数据</summary><div class="sub">${escapeHtml(c.note)} · 中枢 ${escapeHtml(c.cur_zs||'-')} · 笔${c.bis} 分型${c.fractals}</div></details>`;
   } else ct.innerHTML = '<div class="warn">缠论数据不可用，不生成操作建议。</div>';
   const dt = document.getElementById('depthTxt');
   let html = '';
   const em = d.emotion||{};
-  if(em.space_leader) html += `<div>空间龙头 <b>${escapeHtml(em.space_leader)}</b> · 涨停${fmt(em.zt,0)} 炸板${fmt(em.zb,0)} 封板率${fmt(em.seal_rate,0)}%</div>`;
-  if(rows(d.zt_board).length) html += `<div class="sub" style="margin-top:4px">涨停分级</div>` + rows(d.zt_board).slice(0,5).map(b=>`<div>${escapeHtml(b.板)} ${fmt(b.涨停,0)}涨停 龙${escapeHtml(b.龙头)}${fmt(b.龙头板数,0)}板</div>`).join('');
-  if(rows(d.chain_stage).length) html += `<div class="sub" style="margin-top:4px">热度阶段: ${rows(d.chain_stage).map(x=>escapeHtml(x.板块)+'='+escapeHtml(x.阶段)).join(' / ')}</div>`;
+  if(em.space_leader) html += `<div>空间龙头 <b>${em.space_leader}</b> · 涨停${em.zt} 炸板${em.zb} 封板率${em.seal_rate}%</div>`;
+  if((d.zt_board||[]).length) html += `<div class="sub" style="margin-top:4px">涨停分级</div>` + d.zt_board.slice(0,5).map(b=>`<div>${b.板} ${b.涨停}涨停 龙${b.龙头}${b.龙头板数}板</div>`).join('');
+  if((d.chain_stage||[]).length) html += `<div class="sub" style="margin-top:4px">热度阶段: ${d.chain_stage.map(x=>x.板块+'='+x.阶段).join(' / ')}</div>`;
   dt.innerHTML = html || '<div class="sub">深度数据无</div>';
 }
 function loadSocial(reviewDate){
-  const sequence=loadSequence;
-  const loading=document.getElementById('socialTxt');if(loading)loading.textContent='当前参考舆情正在读取';
-  return fetch('/api/social').then(async r=>{const d=await r.json();if(!r.ok||d?.ok!==true)throw Error(d?.error||`HTTP ${escapeHtml(r.status)}`);return d;}).then(d=>{
-    if(sequence!==loadSequence)return;
-    const el = document.getElementById('socialTxt'); if(!el)return;if(!d.ok){ el.textContent=String(d.error||'舆情读取失败'); return; }
+  fetch('/api/social').then(r=>r.json()).then(d=>{
+    const el = document.getElementById('socialTxt'); if(!d.ok){ el.innerHTML='<div class="sub">'+d.error+'</div>'; return; }
     const ms = d.data.market_sentiment||{};
     const currentReference = Boolean(reviewDate);
     const sources=d.data.sources||{};
-    let html = `${currentReference ? `<div class="warn">当前参考数据：${escapeHtml(String(d.data?.as_of || '日期未知'))}，不计入 ${escapeHtml(reviewDate)} 历史复盘结论。</div>` : ''}<div>${escapeHtml(d.data.note||'')}</div><div class="sub">${escapeHtml(d.data.available_sources||0)} 个来源有效 · ${escapeHtml(d.data.stale_sources||0)} 个来源过期</div>`;
+    let html = `${currentReference ? `<div class="warn">当前参考数据：${escapeHtml(String(d.data?.as_of || '日期未知'))}，不计入 ${escapeHtml(reviewDate)} 历史复盘结论。</div>` : ''}<div>${escapeHtml(d.data.note||'')}</div><div class="sub">${d.data.available_sources||0} 个来源有效 · ${d.data.stale_sources||0} 个来源过期</div>`;
     const failed=Object.entries(sources).filter(([,meta])=>!['ok'].includes(meta.status));
     if(failed.length) html+=`<details style="margin-top:5px"><summary class="sub">来源状态</summary>${failed.map(([name,meta])=>`<div class="sub">${escapeHtml(name)}：${escapeHtml(meta.status)}${meta.error?' · '+escapeHtml(meta.error):''}</div>`).join('')}</details>`;
-    if(ms.market_sentiment!=null && Number.isFinite(Number(ms.market_sentiment)) && Math.abs(Number(ms.market_sentiment))<=1){
-      const v = Number(ms.market_sentiment), cls = v>0.15?'up':(v<-0.15?'down':'');
-      html += `<div style="margin-top:4px">市场情绪 <b class="${cls}" style="font-size:16px">${escapeHtml((v>=0?'+':'')+v.toFixed(2))}</b> <span class="sub">(${escapeHtml(ms.available||0)}/${escapeHtml(ms.total||0)}源 · ${escapeHtml(ms.updated||'')})</span></div>`;
+    if(ms.market_sentiment!=null){
+      const v = ms.market_sentiment, cls = v>0.15?'up':(v<-0.15?'down':'');
+      html += `<div style="margin-top:4px">市场情绪 <b class="${cls}" style="font-size:16px">${(v>=0?'+':'')+v.toFixed(2)}</b> <span class="sub">(${ms.available||0}/${ms.total||0}源 · ${ms.updated||''})</span></div>`;
     }
-    if(rows(d.data.guba).length) html += `<div class="sub" style="margin-top:4px">股吧热股</div><div>${d.data.guba.map(g=>escapeHtml(g.name||'')).join('、')}</div>`;
-    if(rows(d.data.baidu).length) html += `<div class="sub" style="margin-top:4px">百度热搜</div><div>${d.data.baidu.map(b=>escapeHtml((b.name||'')+(b.chg?' '+b.chg:''))).join('、')}</div>`;
-    if(rows(d.data.bilibili).length) html += `<div class="sub" style="margin-top:4px">B站财经热榜</div><div>${d.data.bilibili.slice(0,5).map(b=>escapeHtml(b.title||b.name||'')).join('、')}</div>`;
-    if((d.data.xueqiu||{}).posts&&d.data.xueqiu.posts.length) html += `<div class="sub" style="margin-top:4px">雪球热帖</div><div>${d.data.xueqiu.posts.slice(0,4).map(p=>escapeHtml(p.title||'')).join('、')}</div>`;
+    if((d.data.guba||[]).length) html += `<div class="sub" style="margin-top:4px">股吧热股</div><div>${d.data.guba.map(g=>g.name||'').join('、')}</div>`;
+    if((d.data.baidu||[]).length) html += `<div class="sub" style="margin-top:4px">百度热搜</div><div>${d.data.baidu.map(b=>(b.name||'')+(b.chg?' '+b.chg:'')).join('、')}</div>`;
+    if((d.data.bilibili||[]).length) html += `<div class="sub" style="margin-top:4px">B站财经热榜</div><div>${d.data.bilibili.slice(0,5).map(b=>b.title||b.name||'').join('、')}</div>`;
+    if((d.data.xueqiu||{}).posts&&d.data.xueqiu.posts.length) html += `<div class="sub" style="margin-top:4px">雪球热帖</div><div>${d.data.xueqiu.posts.slice(0,4).map(p=>p.title||'').join('、')}</div>`;
     el.innerHTML = html || '<div class="sub">无舆情数据</div>';
-  }).catch(e=>{if(sequence!==loadSequence)return;const el=document.getElementById('socialTxt');if(el)el.textContent='当前舆情不可用：'+(e.message||'网络请求失败');});
+  }).catch(e=>{ document.getElementById('socialTxt').innerHTML='<div class="warn">当前舆情不可用：'+escapeHtml(e.message||'网络请求失败')+'</div>'; });
 }
 function renderBattleMap(x){
   const bm = x.battle_map||{};
   if(!bm.action_card && !bm.bid_watch){ document.getElementById('bmTxt').innerHTML='<div class="sub">无作战决策</div>'; return; }
   let html = '';
-  if(bm.action_card) html += `<div>行动卡: <b style="font-size:16px">${escapeHtml(bm.action_card)}</b> <span class="sub">仓位${escapeHtml(bm.position_range||'?')} 置信${escapeHtml(Number.isFinite(Number(bm.confidence))&&bm.confidence!=null&&Number(bm.confidence)>=0&&Number(bm.confidence)<=1?((Number(bm.confidence)*100).toFixed(0)+'%'):'?')}</span></div>`;
-  if(rows(bm.bid_watch).length) html += `<div class="sub" style="margin-top:6px">竞价锚点</div><ul>${rows(bm.bid_watch).slice(0,3).map(b=>`<li>${escapeHtml(b.item||'')} → <span class="warn-text">${escapeHtml(b.signal||'')}</span></li>`).join('')}</ul>`;
+  if(bm.action_card) html += `<div>行动卡: <b style="font-size:16px">${bm.action_card}</b> <span class="sub">仓位${bm.position_range||'?'} 置信${bm.confidence!=null?((bm.confidence*100).toFixed(0)+'%'):'?'}</span></div>`;
+  if((bm.bid_watch||[]).length) html += `<div class="sub" style="margin-top:6px">竞价锚点</div><ul>${bm.bid_watch.slice(0,3).map(b=>`<li>${b.item||''} → <span class="warn-text">${b.signal||''}</span></li>`).join('')}</ul>`;
   const ag = bm.attack_groups||{};
-  if(rows(ag.core).length) html += `<div class="sub" style="margin-top:6px">核心攻击</div><ul>${rows(ag.core).slice(0,4).map(a=>`<li>${escapeHtml(a.name||'')} ${fmt(a.score,1)} <span class="sub">${escapeHtml((a.leader||{}).name||'')}${fmt((a.leader||{}).boards,0)}板</span></li>`).join('')}</ul>`;
-  const rw = rows(bm.risk_watch);
-  if(rw.length) html += `<div class="sub" style="margin-top:6px">风险: ${rw.slice(0,4).map(r=>escapeHtml(r.name||r.code||'')).join('、')}</div>`;
+  if((ag.core||[]).length) html += `<div class="sub" style="margin-top:6px">核心攻击</div><ul>${ag.core.slice(0,4).map(a=>`<li>${a.name||''} ${a.score||''} <span class="sub">${(a.leader||{}).name||''}${(a.leader||{}).boards||''}板</span></li>`).join('')}</ul>`;
+  const rw = bm.risk_watch||[];
+  if(rw.length) html += `<div class="sub" style="margin-top:6px">风险: ${rw.slice(0,4).map(r=>r.name||r.code||'').join('、')}</div>`;
   document.getElementById('bmTxt').innerHTML = html;
 }
 function loadMkt(reviewDate){
-  const sequence=loadSequence;
-  const loading=document.getElementById('mktTxt');if(loading)loading.textContent='当前参考行情正在读取';
-  return fetch('/api/market_pano').then(async r=>{
-    const d=await r.json(); if(!r.ok||!d.ok) throw new Error(d.error||`HTTP ${escapeHtml(r.status)}`); return d;
+  fetch('/api/market_pano').then(async r=>{
+    const d=await r.json(); if(!r.ok||!d.ok) throw new Error(d.error||`HTTP ${r.status}`); return d;
   }).then(d=>{
-    if(sequence!==loadSequence)return;
     const el = document.getElementById('mktTxt');
-    if(!el)return;
     const currentReference = Boolean(reviewDate);
     let html = currentReference ? `<div class="warn">当前参考数据：${escapeHtml(String(d.as_of || '日期未知'))}，不计入 ${escapeHtml(reviewDate)} 历史复盘结论。</div>` : '';
     if(d.status==='partial') html += '<div class="warn">部分市场数据不可用，以下仅展示有效项。</div>';
-    if(rows(d.errors).length) html += `<details><summary class="sub">数据源异常 ${escapeHtml(d.errors.length)} 项</summary>${rows(d.errors).slice(0,6).map(e=>`<div class="sub">${escapeHtml(e.source)}：${escapeHtml(e.error||e.status)}</div>`).join('')}</details>`;
-    if(rows(d.commodity).length) html += `<div class="sub">关键商品</div><div>${d.commodity.filter(c=>Number.isFinite(Number(c.last))&&Number(c.last)!==0).map(c=>escapeHtml(c.name)+'='+Number(c.last).toLocaleString()).join('、')}</div>`;
-    if(rows(d.rates).length) html += `<div class="sub" style="margin-top:4px">利率/汇率</div><div>${d.rates.filter(r=>r.last!=null&&Number.isFinite(Number(r.last))).map(r=>escapeHtml(r.name)+'='+escapeHtml(Number(r.last))).join('、')}</div>`;
+    if((d.errors||[]).length) html += `<details><summary class="sub">数据源异常 ${d.errors.length} 项</summary>${d.errors.slice(0,6).map(e=>`<div class="sub">${escapeHtml(e.source)}：${escapeHtml(e.error||e.status)}</div>`).join('')}</details>`;
+    if((d.commodity||[]).length) html += `<div class="sub">关键商品</div><div>${d.commodity.filter(c=>Number.isFinite(Number(c.last))&&Number(c.last)!==0).map(c=>escapeHtml(c.name)+'='+Number(c.last).toLocaleString()).join('、')}</div>`;
+    if((d.rates||[]).length) html += `<div class="sub" style="margin-top:4px">利率/汇率</div><div>${d.rates.filter(r=>r.last!=null).map(r=>escapeHtml(r.name)+'='+r.last).join('、')}</div>`;
     if(d.regime&&typeof d.regime==='object') html += `<div class="sub" style="margin-top:4px">市场状态</div><div>${escapeHtml(d.regime.regime||d.regime.state||'已更新')}</div>`;
-    if(d.zt_stats&&typeof d.zt_stats==='object') html += `<div class="sub" style="margin-top:4px">涨跌停</div><div>涨停 ${escapeHtml(d.zt_stats.zt_cnt??'-')} · 炸板 ${escapeHtml(d.zt_stats.zb_cnt??'-')} · 跌停 ${escapeHtml(d.zt_stats.dt_cnt??'-')}</div>`;
+    if(d.zt_stats&&typeof d.zt_stats==='object') html += `<div class="sub" style="margin-top:4px">涨跌停</div><div>涨停 ${d.zt_stats.zt_cnt??'-'} · 炸板 ${d.zt_stats.zb_cnt??'-'} · 跌停 ${d.zt_stats.dt_cnt??'-'}</div>`;
     el.innerHTML = html || '<div class="warn">没有可用于决策的市场全景数据。</div>';
-  }).catch(e=>{if(sequence!==loadSequence)return;const el=document.getElementById('mktTxt');if(el)el.textContent='市场全景不可用：'+(e.message||'请求失败');});
+  }).catch(e=>{ document.getElementById('mktTxt').innerHTML='<div class="warn">市场全景不可用：'+escapeHtml(e.message||'请求失败')+'</div>'; });
 }
 function renderOverseas(x){
-  const ov = rows(x.overseas), el=document.getElementById('overseasTxt');
+  const ov = x.overseas||[], el=document.getElementById('overseasTxt');
   if(!ov.length){ el.innerHTML='<div class="warn">海外关键资产不可用，不参与风险评分。</div>'; return; }
   const critical=['费城半导体','纳指','纳指100','标普500','伦敦金','WTI原油','美元指数','离岸人民币'];
   const ordered=ov.slice().sort((a,b)=>critical.indexOf(a.label)-critical.indexOf(b.label));
   const dates=[...new Set(ordered.map(q=>q.date).filter(Boolean))];
-  el.innerHTML=`<div class="sub">覆盖 ${escapeHtml(ordered.length)} 项 · 数据日 ${escapeHtml(dates[0]||x.date||'-')}</div>`+
-    ordered.slice(0,10).map(q=>`<div style="display:flex;justify-content:space-between;padding:3px 0"><span>${escapeHtml(q.label)}</span><span class="${escapeHtml(q.chg_pct>0?'up':(q.chg_pct<0?'down':''))}">${escapeHtml(q.chg_pct>0?'+':'')}${escapeHtml(q.chg_pct==null?'-':q.chg_pct+'%')} <b>${escapeHtml(q.price??'-')}</b></span></div>`).join('');
+  el.innerHTML=`<div class="sub">覆盖 ${ordered.length} 项 · 数据日 ${escapeHtml(dates[0]||x.date||'-')}</div>`+
+    ordered.slice(0,10).map(q=>`<div style="display:flex;justify-content:space-between;padding:3px 0"><span>${escapeHtml(q.label)}</span><span class="${q.chg_pct>0?'up':(q.chg_pct<0?'down':'')}">${q.chg_pct>0?'+':''}${q.chg_pct==null?'-':q.chg_pct+'%'} <b>${q.price??'-'}</b></span></div>`).join('');
 }
 function renderDir(x){
   const contract=x.mainlines||{}, dirs=contract.items||x.directions||[], el=document.getElementById('dirTxt');
   if(dirs.length){
     const confirmed=dirs.filter(d=>d.status==='confirmed'||(!d.status&&d.level==='主线'));
     const watch=dirs.filter(d=>!confirmed.includes(d));
-    let html=`<div class="sub">数据日 ${escapeHtml(contract.as_of||x.date||'-')} · ${escapeHtml(confirmed.length)} 条确认主线 / ${escapeHtml(watch.length)} 条观察方向</div>`;
-    if(confirmed.length) html+=`<ul>${confirmed.slice(0,5).map(d=>`<li><b>${escapeHtml(d.name)}</b><span class="tag main">主线</span><span>${escapeHtml(Number(d.score).toFixed(1))}分</span></li>`).join('')}</ul>`;
+    let html=`<div class="sub">数据日 ${escapeHtml(contract.as_of||x.date||'-')} · ${confirmed.length} 条确认主线 / ${watch.length} 条观察方向</div>`;
+    if(confirmed.length) html+=`<ul>${confirmed.slice(0,5).map(d=>`<li><b>${escapeHtml(d.name)}</b><span class="tag main">主线</span><span>${Number(d.score).toFixed(1)}分</span></li>`).join('')}</ul>`;
     if(watch.length) html+=`<details style="margin-top:6px"><summary class="sub">查看观察方向</summary><ul>${watch.slice(0,6).map(d=>{const e=d.evidence||{};const missing=[!e.structure?.ok?'结构':null,!e.funding?.ok?'资金':null,!e.persistence?.ok?'持续性':null].filter(Boolean).join('、');return `<li><b>${escapeHtml(d.name)}</b><span class="tag sub2">待确认</span><span class="sub">缺${escapeHtml(missing||'交叉证据')}</span></li>`}).join('')}</ul></details>`;
     el.innerHTML=html;
     return;
@@ -436,18 +409,18 @@ function renderDir(x){
 }
 
 function renderLeader(x){
-  const ls=x.leader||{}, l=ls.ladder||{}, sig=rows(ls.signals);
-  let html = `<div>涨停 <b class="up">${escapeHtml(l.zt_cnt??'-')}</b> · 炸板 ${escapeHtml(l.zb_cnt??'-')} · 跌停 <b class="down">${escapeHtml(l.dt_cnt??'-')}</b> · 最高 <b>${escapeHtml(l.max_board??'-')}</b>板</div>`;
-  if(sig.length) html += `<ul style="margin-top:6px">${sig.slice(0,4).map(s=>`<li><b>${escapeHtml(s.concept||s.board_name||'')}</b> ${escapeHtml(s.signal||'')}</li>`).join('')}</ul>`;
+  const ls=x.leader||{}, l=ls.ladder||{}, sig=ls.signals||[];
+  let html = `<div>涨停 <b class="up">${l.zt_cnt??'-'}</b> · 炸板 ${l.zb_cnt??'-'} · 跌停 <b class="down">${l.dt_cnt??'-'}</b> · 最高 <b>${l.max_board??'-'}</b>板</div>`;
+  if(sig.length) html += `<ul style="margin-top:6px">${sig.slice(0,4).map(s=>`<li><b>${s.concept||s.board_name||''}</b> ${s.signal||''}</li>`).join('')}</ul>`;
   document.getElementById('leaderTxt').innerHTML = html;
 }
 
 function renderLhb(x){
-  const l=x.lhb||{}, bt=rows(l.broker_top), st=rows(l.stock_top);
+  const l=x.lhb||{}, bt=l.broker_top||[], st=l.stock_top||[];
   function fmtItem(o){
-    if(typeof o==='string'){try{o=JSON.parse(o)}catch(e){return `<li>${escapeHtml(o)}</li>`}}
+    if(typeof o==='string'){try{o=JSON.parse(o)}catch(e){return `<li>${o}</li>`}}
     const net=Number(o.net||0);
-    return `<li>${escapeHtml(o.name||o.code||'?')} <span class="${escapeHtml(net>=0?'up':'down')}">${escapeHtml(fmt(net,2))}</span>${o.pct!=null?` ${escapeHtml(pctStr(o.pct))}`:''}</li>`;
+    return `<li>${o.name||o.code||'?'} <span class="${net>=0?'up':'down'}">${fmt(net,2)}</span>${o.pct!=null?` ${pctStr(o.pct)}`:''}</li>`;
   }
   document.getElementById('lhbTxt').innerHTML = `
     <div class="sub">游资营业部 Top</div><ul>${bt.slice(0,4).map(fmtItem).join('')}</ul>
@@ -456,13 +429,13 @@ function renderLhb(x){
 
 function renderPools(x){
   const p=x.pools||{};
-  const li=(v,f)=>Array.isArray(v)&&v.length?rows(v).slice(0,6).map(f).join(''):'<li class="sub">—</li>';
-  document.getElementById('pool_short').innerHTML = li(p.short_term, s=>`<li><b>${escapeHtml(s.concept||s.name||'')}</b><span class="tag ${escapeHtml(s.level==='主线'?'main':'sub2')}">${escapeHtml(s.level||'')}</span></li>`);
-  document.getElementById('pool_lhb').innerHTML = li(p.lhb_stocks, s=>`<li><b>${escapeHtml(s.name||'')}</b>(${escapeHtml(s.code||'')})<span class="${escapeHtml(Number(s.net)>=0?'up':'down')}">${escapeHtml(fmt(s.net,2))}</span></li>`);
-  document.getElementById('pool_rs').innerHTML = li(p.rs_stocks, s=>`<li><b>${escapeHtml(s.name||'')}</b>(${escapeHtml(s.code||'')})<span class="tag">#${escapeHtml(s.rank||'')}</span></li>`);
+  const li=(v,f)=>v&&v.length?v.slice(0,6).map(f).join(''):'<li class="sub">—</li>';
+  document.getElementById('pool_short').innerHTML = li(p.short_term, s=>`<li><b>${s.concept||s.name||''}</b><span class="tag ${s.level==='主线'?'main':'sub2'}">${s.level||''}</span></li>`);
+  document.getElementById('pool_lhb').innerHTML = li(p.lhb_stocks, s=>`<li><b>${s.name||''}</b>(${s.code||''})<span class="${Number(s.net)>=0?'up':'down'}">${fmt(s.net,2)}</span></li>`);
+  document.getElementById('pool_rs').innerHTML = li(p.rs_stocks, s=>`<li><b>${s.name||''}</b>(${s.code||''})<span class="tag">#${s.rank||''}</span></li>`);
   document.getElementById('pool_mid').innerHTML = li(p.mid_long, s=>{
-    let o=s; if(typeof s==='string'){try{o=JSON.parse(s)}catch(e){return '<li>'+escapeHtml(s)+'</li>'}} if(!o||typeof o!=='object')return '<li>—</li>';
-    return `<li><b>${escapeHtml(o.name||'')}</b>(${escapeHtml(o.code||'')})<span class="sub">PE${escapeHtml(o.pe||'?')} PB${escapeHtml(o.pb||'?')}</span></li>`;});
+    const o=typeof s==='string'?JSON.parse(s):s;
+    return `<li><b>${o.name||''}</b>(${o.code||''})<span class="sub">PE${o.pe||'?'} PB${o.pb||'?'}</span></li>`;});
 }
 
 function renderFactor(x){
@@ -476,23 +449,23 @@ function renderFactor(x){
     series:[{type:'bar',data:vals.map(v=>({value:v,itemStyle:{color:v>=38?'#f23645':(v>=34?'#f0b429':'#00b368')}})),
       label:{show:true,position:'top',formatter:'{c}%',color:'#e8edf4'}}]});
   document.getElementById('factorTxt').innerHTML = `
-    <div class="sub">强势因子</div><ul>${rows(q.top_factors).slice(0,5).map(f=>`<li><b class="up">${escapeHtml(f)}</b></li>`).join('')||'<li class="sub">—</li>'}</ul>
-    <div class="sub" style="margin-top:8px">走弱因子</div><ul>${rows(q.weak_factors).slice(0,5).map(f=>`<li><b class="down">${escapeHtml(f)}</b></li>`).join('')||'<li class="sub">—</li>'}</ul>`;
+    <div class="sub">强势因子</div><ul>${(q.top_factors||[]).slice(0,5).map(f=>`<li><b class="up">${f}</b></li>`).join('')||'<li class="sub">—</li>'}</ul>
+    <div class="sub" style="margin-top:8px">走弱因子</div><ul>${(q.weak_factors||[]).slice(0,5).map(f=>`<li><b class="down">${f}</b></li>`).join('')||'<li class="sub">—</li>'}</ul>`;
   const tb=document.getElementById('btTable').querySelector('tbody');
-  tb.innerHTML=rows(q.backtest).slice(0,6).map(c=>`<tr><td>${escapeHtml(c.symbol)}</td><td>${escapeHtml(c.mom20??'-')}</td><td>${escapeHtml(c.vol20??'-')}</td></tr>`).join('')||'<tr><td colspan="3">—</td></tr>';
-  const ml=rows(q.ml);
+  tb.innerHTML=(q.backtest||[]).slice(0,6).map(c=>`<tr><td>${c.symbol}</td><td>${c.mom20??'-'}</td><td>${c.vol20??'-'}</td></tr>`).join('')||'<tr><td colspan="3">—</td></tr>';
+  const ml=q.ml||[];
   document.getElementById('mlTxt').innerHTML = ml.length? ml.map(p=>{
     const v=typeof p.pred==='string'?p.pred:JSON.stringify(p.pred);
-    return `<li><b>${escapeHtml(p.symbol)}</b><span class="tag">${escapeHtml(String(v).slice(0,34))}</span></li>`;}).join('') : '<li class="sub">ML 未就绪</li>';
+    return `<li><b>${p.symbol}</b><span class="tag">${String(v).slice(0,34)}</span></li>`;}).join('') : '<li class="sub">ML 未就绪</li>';
 }
 
 function renderPredictionLoop(x){
   const p=x.prediction_loop||{}, el=document.getElementById('predictionTxt'); if(!el) return;
   const verified=Number(p.verified_n||0), correct=Number(p.correct_n||0), total=Number(p.total||0), pending=Number(p.pending||0);
-  let html=`<div>已验证 <b>${escapeHtml(verified)}</b> · 判对 <b class="${escapeHtml(verified&&correct/verified>=0.5?'ok':'warn')}">${escapeHtml(correct)}</b> · 命中率 <b>${escapeHtml(p.hit==null?'-':(Number(p.hit)*100).toFixed(1)+'%')}</b> · Brier ${escapeHtml(p.brier??'-')}</div>`;
-  html+=`<div class="sub" style="margin-top:5px">待验证 ${escapeHtml(pending)} / 累计 ${escapeHtml(total)}。${escapeHtml(p.note||'样本不足时不宣称模型有效。')}</div>`;
-  const mods=rows(p.by_module);
-  if(mods.length) html+=`<ul style="margin-top:7px">${mods.slice(0,6).map(m=>`<li>${escapeHtml(m.module||'-')} <span class="tag">n=${escapeHtml(m.n??0)} · 命中 ${escapeHtml(m.hit==null?'-':(Number(m.hit)*100).toFixed(0)+'%')}</span></li>`).join('')}</ul>`;
+  let html=`<div>已验证 <b>${verified}</b> · 判对 <b class="${verified&&correct/verified>=0.5?'ok':'warn'}">${correct}</b> · 命中率 <b>${p.hit==null?'-':(Number(p.hit)*100).toFixed(1)+'%'}</b> · Brier ${p.brier??'-'}</div>`;
+  html+=`<div class="sub" style="margin-top:5px">待验证 ${pending} / 累计 ${total}。${p.note||'样本不足时不宣称模型有效。'}</div>`;
+  const mods=p.by_module||[];
+  if(mods.length) html+=`<ul style="margin-top:7px">${mods.slice(0,6).map(m=>`<li>${m.module||'-'} <span class="tag">n=${m.n??0} · 命中 ${m.hit==null?'-':(Number(m.hit)*100).toFixed(0)+'%'}</span></li>`).join('')}</ul>`;
   el.innerHTML=html;
 }
 
@@ -500,16 +473,16 @@ function renderDecision(x){
   const bm=x.battle_map||{};
   document.getElementById('verdictDetail').innerHTML = `
     <div class="row">
-      <div>行动卡</div><div class="act">${escapeHtml(bm.action_card||'?')}</div>
-      <div class="pos">仓位 ${escapeHtml(bm.position_range||'?')} · 置信 ${escapeHtml(Number.isFinite(Number(bm.confidence))&&bm.confidence!=null&&Number(bm.confidence)>=0&&Number(bm.confidence)<=1?((Number(bm.confidence)*100).toFixed(0)+'%'):'?')}</div>
+      <div>行动卡</div><div class="act">${bm.action_card||'?'}</div>
+      <div class="pos">仓位 ${bm.position_range||'?'} · 置信 ${bm.confidence!=null?((bm.confidence*100).toFixed(0)+'%'):'?'}</div>
     </div>`;
-  document.getElementById('bidTxt').innerHTML = rows(bm.bid_watch).length?
-    `<ul>${rows(bm.bid_watch).slice(0,5).map(b=>`<li>${escapeHtml(b.item||'')}<span class="tag">${escapeHtml(b.signal||'')}</span></li>`).join('')}</ul>`
+  document.getElementById('bidTxt').innerHTML = (bm.bid_watch||[]).length?
+    `<ul>${bm.bid_watch.slice(0,5).map(b=>`<li>${b.item||''}<span class="tag">${b.signal||''}</span></li>`).join('')}</ul>`
     : '<li class="sub">无竞价锚点</li>';
-  const risk=rows(bm.risk_stocks), deg=rows(bm.degraded);
+  const risk=(bm.risk_stocks||[]), deg=(bm.degraded||[]);
   document.getElementById('riskTxt').innerHTML = `
-    ${risk.length?`<div class="sub">风险个股 ${escapeHtml(risk.length)} 只</div><ul>${risk.slice(0,5).map(r=>`<li>${escapeHtml(r.name||r.code||'')}</li>`).join('')}</ul>`:'<div class="sub">无风险清单</div>'}
-    ${deg.length?`<div class="warn" style="margin-top:8px">⚠️ 降级: ${escapeHtml(deg.slice(0,4).join('; '))}</div>`:''}`;
+    ${risk.length?`<div class="sub">风险个股 ${risk.length} 只</div><ul>${risk.slice(0,5).map(r=>`<li>${r.name||r.code||''}</li>`).join('')}</ul>`:'<div class="sub">无风险清单</div>'}
+    ${deg.length?`<div class="warn" style="margin-top:8px">⚠️ 降级: ${deg.slice(0,4).join('; ')}</div>`:''}`;
 }
 
 function showTab(id){

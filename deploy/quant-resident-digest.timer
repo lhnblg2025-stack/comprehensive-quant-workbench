@@ -1,0 +1,11 @@
+[Unit]
+Description=Quant resident daily Feishu digest
+
+[Timer]
+OnCalendar=Mon..Fri 19:10:00 Asia/Shanghai
+Persistent=true
+RandomizedDelaySec=90
+Unit=quant-resident-digest.service
+
+[Install]
+WantedBy=timers.target

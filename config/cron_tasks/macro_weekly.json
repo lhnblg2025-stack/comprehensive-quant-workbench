@@ -1,0 +1,14 @@
+{
+  "task_id": "macro_weekly",
+  "scheduler_id": "55036701-2a5a-492a-a3cc-fea2bfd64ef6",
+  "name": "5-宏观数据周报",
+  "report_key": "macro_weekly",
+  "enabled": true,
+  "schedule": "0 17 * * 0",
+  "timezone": "Asia/Shanghai",
+  "command": [
+    "python3",
+    "${QUANT_WORKSPACE:-.}/scripts/generate_macro_weekly_report.py"
+  ],
+  "timeout_seconds": 1800
+}

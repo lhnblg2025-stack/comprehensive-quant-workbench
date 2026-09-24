@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "updated_at": "2026-08-04",
+  "description": "V7.0 网络代理开关。海外源(yfinance/FRED等)在国内被墙时启用；本机挂VPN时填VPN本地端口。",
+  "enabled": false,
+  "proxy": "socks5://127.0.0.1:1080",
+  "http_proxy": "",
+  "https_proxy": "",
+  "env": "local"
+}

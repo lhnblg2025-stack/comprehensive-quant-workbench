@@ -1,0 +1,11 @@
+[Unit]
+Description=每日A股量化数据基座滚动更新定时器
+
+[Timer]
+OnCalendar=Mon..Fri *-*-* 16:00:00 Asia/Shanghai
+Persistent=true
+RandomizedDelaySec=120
+Unit=quant-data-update.service
+
+[Install]
+WantedBy=timers.target

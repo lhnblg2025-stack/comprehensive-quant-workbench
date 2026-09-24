@@ -1,0 +1,12 @@
+{
+  "task_id": "a_share_daily",
+  "name": "A股量化日报",
+  "report_key": "a_share_daily",
+  "command": [
+    "python3",
+    "${QUANT_WORKSPACE:-.}/scripts/a_share_daily_report.py",
+    "--out",
+    "{out}"
+  ],
+  "timeout_seconds": 1800
+}

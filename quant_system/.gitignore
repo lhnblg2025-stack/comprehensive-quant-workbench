@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+*.log
+*.db
+*.sqlite
+*.parquet
+.venv/
+venv/
+
+# 测试/图表产物
+charts/*.csv
+charts/*.png
+charts/*.txt
+
+# 运行时产物（每日生成，不入库）
+generated/

@@ -1,0 +1,359 @@
+{
+  "$schema": "https://openclaw.ai/schemas/openclaw.json",
+  "skills": {
+    "entries": {
+      "fsi-fa-3-statements": {
+        "enabled": true
+      },
+      "fsi-fa-check-deck": {
+        "enabled": true
+      },
+      "fsi-fa-check-model": {
+        "enabled": true
+      },
+      "fsi-fa-competitive-analysis": {
+        "enabled": true
+      },
+      "fsi-comps-analysis": {
+        "enabled": true
+      },
+      "fsi-fa-dcf-model": {
+        "enabled": true
+      },
+      "fsi-fa-lbo-model": {
+        "enabled": true
+      },
+      "fsi-fa-ppt-template-creator": {
+        "enabled": true
+      },
+      "fsi-fa-skill-creator": {
+        "enabled": true
+      },
+      "fsi-fa-cmd-3-statements": {
+        "enabled": true
+      },
+      "fsi-fa-cmd-check-deck": {
+        "enabled": true
+      },
+      "fsi-fa-cmd-competitive-analysis": {
+        "enabled": true
+      },
+      "fsi-fa-cmd-comps": {
+        "enabled": true
+      },
+      "fsi-fa-cmd-dcf": {
+        "enabled": true
+      },
+      "fsi-fa-cmd-debug-model": {
+        "enabled": true
+      },
+      "fsi-fa-cmd-lbo": {
+        "enabled": true
+      },
+      "fsi-fa-cmd-ppt-template": {
+        "enabled": true
+      },
+      "fsi-er-catalyst-calendar": {
+        "enabled": true
+      },
+      "fsi-er-earnings-analysis": {
+        "enabled": true
+      },
+      "fsi-er-earnings-preview": {
+        "enabled": true
+      },
+      "fsi-er-idea-generation": {
+        "enabled": true
+      },
+      "fsi-er-initiating-coverage": {
+        "enabled": true
+      },
+      "fsi-er-model-update": {
+        "enabled": true
+      },
+      "fsi-er-morning-note": {
+        "enabled": true
+      },
+      "fsi-er-sector-overview": {
+        "enabled": true
+      },
+      "fsi-er-thesis-tracker": {
+        "enabled": true
+      },
+      "fsi-er-cmd-catalysts": {
+        "enabled": true
+      },
+      "fsi-er-cmd-earnings-preview": {
+        "enabled": true
+      },
+      "fsi-er-cmd-earnings": {
+        "enabled": true
+      },
+      "fsi-er-cmd-initiate": {
+        "enabled": true
+      },
+      "fsi-er-cmd-model-update": {
+        "enabled": true
+      },
+      "fsi-er-cmd-morning-note": {
+        "enabled": true
+      },
+      "fsi-er-cmd-screen": {
+        "enabled": true
+      },
+      "fsi-er-cmd-sector": {
+        "enabled": true
+      },
+      "fsi-er-cmd-thesis": {
+        "enabled": true
+      },
+      "fsi-ib-buyer-list": {
+        "enabled": true
+      },
+      "fsi-ib-cim-builder": {
+        "enabled": true
+      },
+      "fsi-ib-datapack-builder": {
+        "enabled": true
+      },
+      "fsi-ib-deal-tracker": {
+        "enabled": true
+      },
+      "fsi-ib-merger-model": {
+        "enabled": true
+      },
+      "fsi-ib-pitch-deck": {
+        "enabled": true
+      },
+      "fsi-ib-process-letter": {
+        "enabled": true
+      },
+      "fsi-strip-profile": {
+        "enabled": true
+      },
+      "fsi-ib-teaser": {
+        "enabled": true
+      },
+      "fsi-ib-cmd-buyer-list": {
+        "enabled": true
+      },
+      "fsi-ib-cmd-cim": {
+        "enabled": true
+      },
+      "fsi-ib-cmd-deal-tracker": {
+        "enabled": true
+      },
+      "fsi-ib-cmd-merger-model": {
+        "enabled": true
+      },
+      "fsi-ib-cmd-one-pager": {
+        "enabled": true
+      },
+      "fsi-ib-cmd-process-letter": {
+        "enabled": true
+      },
+      "fsi-ib-cmd-teaser": {
+        "enabled": true
+      },
+      "fsi-pe-due-diligence-checklist": {
+        "enabled": true
+      },
+      "fsi-pe-diligence-meeting-prep": {
+        "enabled": true
+      },
+      "fsi-pe-deal-screening": {
+        "enabled": true
+      },
+      "fsi-pe-deal-sourcing": {
+        "enabled": true
+      },
+      "fsi-pe-investment-committee-memo": {
+        "enabled": true
+      },
+      "fsi-pe-portfolio-monitoring": {
+        "enabled": true
+      },
+      "fsi-pe-returns-analysis": {
+        "enabled": true
+      },
+      "fsi-pe-unit-economics-analysis": {
+        "enabled": true
+      },
+      "fsi-pe-value-creation-plan": {
+        "enabled": true
+      },
+      "fsi-pe-cmd-dd-checklist": {
+        "enabled": true
+      },
+      "fsi-pe-cmd-dd-prep": {
+        "enabled": true
+      },
+      "fsi-pe-cmd-ic-memo": {
+        "enabled": true
+      },
+      "fsi-pe-cmd-portfolio": {
+        "enabled": true
+      },
+      "fsi-pe-cmd-returns": {
+        "enabled": true
+      },
+      "fsi-pe-cmd-screen-deal": {
+        "enabled": true
+      },
+      "fsi-pe-cmd-source": {
+        "enabled": true
+      },
+      "fsi-pe-cmd-unit-economics": {
+        "enabled": true
+      },
+      "fsi-pe-cmd-value-creation": {
+        "enabled": true
+      },
+      "fsi-wm-client-report": {
+        "enabled": true
+      },
+      "fsi-wm-client-review-prep": {
+        "enabled": true
+      },
+      "fsi-wm-financial-plan": {
+        "enabled": true
+      },
+      "fsi-wm-investment-proposal": {
+        "enabled": true
+      },
+      "fsi-wm-portfolio-rebalance": {
+        "enabled": true
+      },
+      "fsi-wm-tax-loss-harvesting": {
+        "enabled": true
+      },
+      "fsi-wm-cmd-client-report": {
+        "enabled": true
+      },
+      "fsi-wm-cmd-client-review": {
+        "enabled": true
+      },
+      "fsi-wm-cmd-financial-plan": {
+        "enabled": true
+      },
+      "fsi-wm-cmd-proposal": {
+        "enabled": true
+      },
+      "fsi-wm-cmd-rebalance": {
+        "enabled": true
+      },
+      "fsi-wm-cmd-tlh": {
+        "enabled": true
+      },
+      "fsi-lseg-bond-futures-basis": {
+        "enabled": true
+      },
+      "fsi-lseg-bond-relative-value": {
+        "enabled": true
+      },
+      "fsi-lseg-equity-research": {
+        "enabled": true
+      },
+      "fsi-lseg-fixed-income-portfolio": {
+        "enabled": true
+      },
+      "fsi-lseg-fx-carry-trade": {
+        "enabled": true
+      },
+      "fsi-lseg-macro-rates-monitor": {
+        "enabled": true
+      },
+      "fsi-lseg-option-vol-analysis": {
+        "enabled": true
+      },
+      "fsi-lseg-swap-curve-strategy": {
+        "enabled": true
+      },
+      "fsi-lseg-cmd-analyze-bond-basis": {
+        "enabled": true
+      },
+      "fsi-lseg-cmd-analyze-bond-rv": {
+        "enabled": true
+      },
+      "fsi-lseg-cmd-analyze-fx-carry": {
+        "enabled": true
+      },
+      "fsi-lseg-cmd-analyze-option-vol": {
+        "enabled": true
+      },
+      "fsi-lseg-cmd-analyze-swap-curve": {
+        "enabled": true
+      },
+      "fsi-lseg-cmd-macro-rates": {
+        "enabled": true
+      },
+      "fsi-lseg-cmd-research-equity": {
+        "enabled": true
+      },
+      "fsi-lseg-cmd-review-fi-portfolio": {
+        "enabled": true
+      },
+      "fsi-spg-earnings-preview-single": {
+        "enabled": true
+      },
+      "fsi-spg-funding-digest": {
+        "enabled": true
+      },
+      "fsi-spg-tear-sheet": {
+        "enabled": true
+      }
+    }
+  },
+  "mcp": {
+    "servers": {
+      "daloopa": {
+        "type": "http",
+        "url": "https://mcp.daloopa.com/server/mcp"
+      },
+      "morningstar": {
+        "type": "http",
+        "url": "https://mcp.morningstar.com/mcp"
+      },
+      "sp-global": {
+        "type": "http",
+        "url": "https://kfinance.kensho.com/integrations/mcp"
+      },
+      "factset": {
+        "type": "http",
+        "url": "https://mcp.factset.com/mcp"
+      },
+      "moodys": {
+        "type": "http",
+        "url": "https://api.moodys.com/genai-ready-data/m1/mcp"
+      },
+      "mtnewswire": {
+        "type": "http",
+        "url": "https://vast-mcp.blueskyapi.com/mtnewswires"
+      },
+      "aiera": {
+        "type": "http",
+        "url": "https://mcp-pub.aiera.com"
+      },
+      "lseg": {
+        "type": "http",
+        "url": "https://api.analytics.lseg.com/lfa/mcp/server-cl"
+      },
+      "pitchbook": {
+        "type": "http",
+        "url": "https://premium.mcp.pitchbook.com/mcp"
+      },
+      "chronograph": {
+        "type": "http",
+        "url": "https://ai.chronograph.pe/mcp"
+      },
+      "egnyte": {
+        "type": "http",
+        "url": "https://mcp-server.egnyte.com/mcp"
+      },
+      "spglobal": {
+        "type": "http",
+        "url": "https://kfinance.kensho.com/integrations/mcp"
+      }
+    }
+  }
+}

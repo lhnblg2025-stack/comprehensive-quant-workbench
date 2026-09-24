@@ -1,0 +1,12 @@
+{
+  "task_id": "pmi",
+  "name": "宏观-PMI数据解读",
+  "report_key": "pmi",
+  "command": [
+    "python3",
+    "${QUANT_WORKSPACE:-.}/scripts/generate_pmi_report.py",
+    "--out",
+    "{out}"
+  ],
+  "timeout_seconds": 1800
+}

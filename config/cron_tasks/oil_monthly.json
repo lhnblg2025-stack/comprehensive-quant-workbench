@@ -1,0 +1,12 @@
+{
+  "task_id": "oil_monthly",
+  "name": "月度原油市场报告",
+  "report_key": "oil_monthly",
+  "command": [
+    "python3",
+    "${QUANT_WORKSPACE:-.}/scripts/generate_requested_reports.py",
+    "--only",
+    "oil"
+  ],
+  "timeout_seconds": 1800
+}

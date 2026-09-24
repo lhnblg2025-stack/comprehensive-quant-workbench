@@ -1,0 +1,56 @@
+{
+  "rules": [
+    {
+      "type": "fixed_stop_loss",
+      "rule_id": "default_sl_8pct",
+      "name": "固定止损8%",
+      "enabled": true,
+      "params": {
+        "loss_pct": 0.08
+      },
+      "created_at": "2026-07-29T04:59:06.749975+08:00"
+    },
+    {
+      "type": "trailing_stop",
+      "rule_id": "default_ts_10pct",
+      "name": "移动止盈10%",
+      "enabled": true,
+      "params": {
+        "trail_pct": 0.1
+      },
+      "created_at": "2026-07-29T04:59:06.750004+08:00"
+    },
+    {
+      "type": "time_stop",
+      "rule_id": "default_time_60d",
+      "name": "时间止损60天",
+      "enabled": true,
+      "params": {
+        "max_days": 60
+      },
+      "created_at": "2026-07-29T04:59:06.750011+08:00"
+    },
+    {
+      "type": "profit_lock",
+      "rule_id": "default_pl_20_50",
+      "name": "利润锁定(20%→50%)",
+      "enabled": true,
+      "params": {
+        "profit_target": 0.2,
+        "lock_ratio": 0.5
+      },
+      "created_at": "2026-07-29T04:59:06.750017+08:00"
+    },
+    {
+      "type": "atr_trailing_stop",
+      "rule_id": "default_atr_3x",
+      "name": "ATR跟踪止损3x",
+      "enabled": false,
+      "params": {
+        "atr_multiple": 3
+      },
+      "created_at": "2026-07-29T04:59:06.750028+08:00"
+    }
+  ],
+  "updated_at": "2026-07-29T04:59:06.750040+08:00"
+}

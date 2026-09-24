@@ -1,5 +1,6 @@
 .env
 .env.*
+.env.secrets
 !.env.example
 *.pem
 *.key
@@ -34,3 +35,21 @@ tmp*/
 *.tar.gz
 *.zip
 *.tgz
+
+# ---- declassification: never publish ----
+# credentials & local secret files
+deploy/ai-coders/
+*_keys.txt
+config/*.sqlite3
+config/*.sqlite
+config/trade_orders.lock
+# sensitive recovery trees
+private_recovery/
+recovered_*/
+recovery_docs/
+项目文档/
+研究报告/
+competition_docs/
+# local runtime dumps
+scripts/ccrd_output/
+:memory:

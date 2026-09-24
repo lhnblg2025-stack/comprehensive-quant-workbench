@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "updated_at": "2026-07-22T07:20:00+08:00",
+  "defaults": {
+    "desktop_archive_required": true,
+    "youdao_required": true,
+    "send_text_to_webchat": true,
+    "max_message_chars": 3500
+  },
+  "youdao": {
+    "enabled": true,
+    "type": "mcp",
+    "transport": "sse",
+    "url": "https://open.mail.163.com/api/ynote/mcp/sse",
+    "message_url_base": "https://open.mail.163.com",
+    "api_key": "env:YOUDAO_API_KEY",
+    "headers": {
+      "Authorization": "Bearer ${api_key}",
+      "X-API-Key": "${api_key}",
+      "x-api-key": "${api_key}"
+    },
+    "target": {
+      "root_folder": "openclaw",
+      "flat": true,
+      "update_in_place": true,
+      "note": "所有报告笔记直接写入根目录下的 openclaw 文件夹一级，同名则覆盖更新，不建子目录、不散落到我的资源"
+    }
+  },
+  "channels": {
+    "webchat": {
+      "enabled": true,
+      "mode": "current_session",
+      "channel": "qqbot",
+      "target": "env:QQBOT_TARGET",
+      "status": "bound_to_current_qqbot_direct_2026-07-22"
+    },
+    "feishu": {
+      "enabled": true,
+      "chat_id": "env:FEISHU_CHAT_ID",
+      "delivery_mode": "chat_new_message",
+      "forbid_reply": true,
+      "forbid_thread_reply": true,
+      "body_delivery_required": true,
+      "document_copy_optional": true,
+      "status": "bound_to_current_feishu_direct_2026-07-22"
+    },
+    "weixin": {
+      "enabled": true,
+      "channel": "openclaw-weixin",
+      "target": "env:WECHAT_TARGET",
+      "accountId": "env:WECHAT_ACCOUNT",
+      "status": "configured_via_environment"
+    },
+    "qq": {
+      "enabled": true,
+      "channel": "qqbot",
+      "target": "env:QQBOT_TARGET",
+      "status": "configured_from_previous_context"
+    }
+  },
+  "extension_slots": {
+    "notes": "Future report tasks/channels should add entries here or under channels without changing report scripts.",
+    "extra_channels": {},
+    "extra_targets": {}
+  }
+}

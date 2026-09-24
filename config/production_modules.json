@@ -1,0 +1,31 @@
+{
+  "schema": "quant-production-modules/v1",
+  "production_chain": [
+    {"id": "data_release", "entry": "quant_system.data_release", "role": "immutable data version", "inputs": ["market", "benchmark", "calendar", "valuation", "financial", "overseas"], "outputs": ["release_id"]},
+    {"id": "analysis", "entry": "quant_system.analysis_core.pipeline.daily_update", "role": "market analysis", "inputs": ["release_id"], "outputs": ["market temperature", "theme cycle", "daily report"]},
+    {"id": "factor_quality", "entry": "scripts/build_factor_quality_registry.py", "role": "promote OOS factors", "inputs": ["IC/OOS reports"], "outputs": ["factor_quality_registry"]},
+    {"id": "portfolio_targets", "entry": "quant_system.strategy_engine.StrategyEngine", "role": "target weights", "inputs": ["release_id", "core factor registry"], "outputs": ["target weights"]},
+    {"id": "execution_audit", "entry": "quant_system.execution_adapter.run_order_level_backtest", "role": "order-level verification", "inputs": ["target weights", "raw prices", "corporate actions"], "outputs": ["orders", "fills", "equity audit"]},
+    {"id": "production_pipeline", "entry": "quant_system.production_pipeline.run", "role": "bind factor targets to order audit", "inputs": ["release_id", "target weights"], "outputs": ["production_pipeline report"]},
+    {"id": "decision", "entry": "scripts/fusion_decision.make_decision", "role": "market posture and risk limits", "inputs": ["analysis", "factor quality", "execution audit"], "outputs": ["decision snapshot"]},
+    {"id": "delivery", "entry": "scripts/daily_review_chain.py", "role": "report and Feishu projection", "inputs": ["release_id", "decision snapshot"], "outputs": ["HTML", "Feishu", "runtime receipt"]}
+  ],
+  "research_only": [
+    "quant_system.factor_model",
+    "quant_system.factor_system",
+    "quant_system.factor_zoo",
+    "quant_system.ic_factors.zoo",
+    "quant_system.cli",
+    "quant_system.backtest",
+    "scripts/factor_strategy_backtest.py"
+  ],
+  "manual_tools": [
+    "scripts/import_paper_execution.py",
+    "scripts/paper_position_reconciliation.py",
+    "scripts/storage_ilm.py"
+  ],
+  "retired": [
+    "workspace/垃圾文件夹/quant_v6",
+    "scripts/daily_report_runner.py"
+  ]
+}

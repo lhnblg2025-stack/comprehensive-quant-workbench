@@ -1,0 +1,16 @@
+{
+  "task_id": "china_internet_weekly",
+  "scheduler_id": "0587c09a-e839-460f-8a6e-22e578dd5990",
+  "name": "159792-定投周报",
+  "report_key": "china_internet_weekly",
+  "enabled": true,
+  "schedule": "40 17 * * 5",
+  "timezone": "Asia/Shanghai",
+  "command": [
+    "python3",
+    "${QUANT_WORKSPACE:-.}/scripts/generate_portfolio_weekly.py",
+    "--task",
+    "china_internet_weekly"
+  ],
+  "timeout_seconds": 1800
+}

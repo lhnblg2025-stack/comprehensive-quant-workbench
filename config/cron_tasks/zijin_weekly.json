@@ -1,0 +1,16 @@
+{
+  "task_id": "zijin_weekly",
+  "scheduler_id": "71847e81-2e75-481f-9114-ed1ec389a903",
+  "name": "3-紫金矿业周报",
+  "report_key": "zijin_weekly",
+  "enabled": true,
+  "schedule": "20 17 * * 5",
+  "timezone": "Asia/Shanghai",
+  "command": [
+    "python3",
+    "${QUANT_WORKSPACE:-.}/scripts/generate_portfolio_weekly.py",
+    "--task",
+    "zijin_weekly"
+  ],
+  "timeout_seconds": 1800
+}

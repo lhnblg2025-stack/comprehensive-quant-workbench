@@ -1,0 +1,13 @@
+{
+  "task_id": "desktop_audit",
+  "name": "桌面文件结构审计（每周日）",
+  "report_key": "ops_system_check",
+  "report_kwargs": {
+    "topic": "桌面文件结构审计"
+  },
+  "command": [
+    "python3",
+    "${QUANT_WORKSPACE:-.}/scripts/desktop_audit.py"
+  ],
+  "timeout_seconds": 1800
+}

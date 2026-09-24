@@ -1,0 +1,26 @@
+{
+  "_说明": "盘中监控配置 — 自选股来源: quant_system.watchlist (409只主板≥300亿)",
+  "_来源": "quant_system/watchlist.py [get_watchlist()]",
+  "watchlist_source": "quant_system",
+  "watchlist_filter": "主板(60xxxx+000xxx+001xxx+002xxx), 流通市值≥300亿",
+  "watchlist_count": 409,
+  "hk_watchlist": [
+    {"symbol": "hk00700", "name": "腾讯控股"},
+    {"symbol": "hk03690", "name": "美团-W"},
+    {"symbol": "hk09988", "name": "阿里巴巴-W"}
+  ],
+  "us_watchlist": [
+    {"symbol": "usAAPL", "name": "苹果"},
+    {"symbol": "usNVDA", "name": "英伟达"},
+    {"symbol": "usTSLA", "name": "特斯拉"}
+  ],
+  "alert_rules": {
+    "price_surge_pct": 3.0,
+    "price_drop_pct": -3.0,
+    "quick_move_pct": 1.5,
+    "volume_surge_ratio": 2.5,
+    "boll_breakout": true,
+    "daily_alert_cooldown_min": 30
+  },
+  "_state_file": "data/monitor_state.json"
+}

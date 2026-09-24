@@ -1,0 +1,14 @@
+{
+  "task_id": "gold_weekly",
+  "scheduler_id": "19ba810b-d311-4da0-ac5f-0ea2d8111a2a",
+  "name": "黄金大宗商品周报-周六22:00",
+  "report_key": "gold_weekly",
+  "enabled": true,
+  "schedule": "0 22 * * 6",
+  "timezone": "Asia/Shanghai",
+  "command": [
+    "python3",
+    "${QUANT_WORKSPACE:-.}/scripts/generate_commodity_weekly.py"
+  ],
+  "timeout_seconds": 1800
+}

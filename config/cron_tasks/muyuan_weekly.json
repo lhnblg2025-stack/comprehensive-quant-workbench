@@ -1,0 +1,16 @@
+{
+  "task_id": "muyuan_weekly",
+  "scheduler_id": "90d98834-93f1-403d-b094-4c8aebecadd6",
+  "name": "2-牧原股份周报",
+  "report_key": "muyuan_weekly",
+  "enabled": true,
+  "schedule": "10 17 * * 5",
+  "timezone": "Asia/Shanghai",
+  "command": [
+    "python3",
+    "${QUANT_WORKSPACE:-.}/scripts/generate_portfolio_weekly.py",
+    "--task",
+    "muyuan_weekly"
+  ],
+  "timeout_seconds": 1800
+}

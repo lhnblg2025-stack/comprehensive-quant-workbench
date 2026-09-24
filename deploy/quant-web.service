@@ -1,0 +1,31 @@
+[Unit]
+Description=MuYun Tianshu Quant Web Dashboard
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=quant
+Group=quant
+RuntimeDirectory=quant
+RuntimeDirectoryMode=0750
+WorkingDirectory=/opt/quant/current
+EnvironmentFile=-/etc/quant/quant.env
+Environment=QUANT_ROOT=/opt/quant/current
+Environment=QUANT_REPORT_ROOT=/opt/quant/shared/reports
+Environment=QUANT_LOCK_DIR=/run/quant
+Environment=QUANT_WEB_BIND_HOST=127.0.0.1
+Environment=QUANT_WEB_PORT=8600
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/opt/quant/venv/bin/python -u /opt/quant/current/quant_web/server.py 8600
+Restart=always
+RestartSec=10
+TimeoutStopSec=30
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/opt/quant/current /opt/quant/shared /opt/quant/config /opt/quant/generated /opt/quant/logs /opt/quant/data_warehouse /run/quant
+
+[Install]
+WantedBy=multi-user.target

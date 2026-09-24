@@ -1,0 +1,19 @@
+[Unit]
+Description=Quant resident catch-up after restart
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=quant
+Group=quant
+WorkingDirectory=/opt/quant/current
+EnvironmentFile=-/etc/quant/quant.env
+Environment=QUANT_ROOT=/opt/quant/current
+ExecStart=/opt/quant/venv/bin/python -u /opt/quant/current/scripts/resident_ops.py catch-up
+TimeoutStartSec=10800
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/opt/quant/current /opt/quant/shared /opt/quant/config /opt/quant/generated /opt/quant/logs /opt/quant/data_warehouse /run/quant

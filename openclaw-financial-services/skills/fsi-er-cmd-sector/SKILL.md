@@ -1,0 +1,10 @@
+---
+name: fsi-er-cmd-sector
+description: "Create a sector overview report — usage: /sector [sector or industry]"
+user-invocable: true
+metadata: {}
+---
+
+Load the `sector-overview` skill and create an industry landscape report covering market sizing, competitive dynamics, and investment implications.
+
+If a sector is provided, use it. Otherwise ask the user which industry to cover.

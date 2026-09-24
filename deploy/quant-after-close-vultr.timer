@@ -1,0 +1,11 @@
+[Unit]
+Description=Quant after-close 15:35 timer (Vultr)
+
+[Timer]
+OnCalendar=Mon..Fri 15:35:00
+Persistent=true
+RandomizedDelaySec=120
+Unit=quant-after-close-vultr.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,14 @@
+{
+  "task_id": "pig_capacity",
+  "name": "生猪产能出清-每月10号",
+  "report_key": "pig_capacity",
+  "command": [
+    "python3",
+    "${QUANT_WORKSPACE:-.}/scripts/generate_asset_weekly_report.py",
+    "--task",
+    "pig_capacity",
+    "--out",
+    "{out}"
+  ],
+  "timeout_seconds": 1800
+}

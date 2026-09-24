@@ -1,0 +1,11 @@
+[Unit]
+Description=MuYun Tianshu after-close on trading weekdays
+
+[Timer]
+OnCalendar=Mon..Fri 15:35:00 Asia/Shanghai
+Persistent=true
+RandomizedDelaySec=120
+Unit=quant-after-close.service
+
+[Install]
+WantedBy=timers.target

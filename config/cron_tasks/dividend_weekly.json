@@ -1,0 +1,17 @@
+{
+  "task_id": "dividend_weekly",
+  "scheduler_id": "356e1211-e99a-444a-8636-0a68bc115932",
+  "name": "1-红利指数周报",
+  "report_key": "dividend_weekly",
+  "enabled": true,
+  "schedule": "0 17 * * 5",
+  "timezone": "Asia/Shanghai",
+  "command": [
+    "python3",
+    "${QUANT_WORKSPACE:-.}/scripts/generate_dividend_weekly.py",
+    "--deliver",
+    "--level",
+    "Top3"
+  ],
+  "timeout_seconds": 1800
+}
