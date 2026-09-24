@@ -1,76 +1,76 @@
-# quant_web · 量化研究工作台 Web UI
+# 🐚 牧云天枢 · 量化系统 Web UI
 
-A股全栈量化研究工作台 · 自建 Web UI + Python 后端。版本跟随 `quant_system/__init__.py`。
+> 当前系统版本跟随 `quant_system/__init__.py`：**V12.3.0**
+> 本 README 于 2026-08-16 整理，替代旧 V6.0 说明。
 
-> 本项目仅用于研究与教育，**不自动下单**，所有交易为研究/纸面/模拟。
+代号：**天枢**（北斗七星之首，喻智慧与方向）
+
+A股全栈量化工作站 · 自建 Web UI + Python 后端。
 
 ---
 
 ## 启动
 
 ```bash
-# 一键启动（推荐，默认绑定 127.0.0.1:8600）
-bash start_quant.sh
+# 一键启动（推荐）
+bash ${PROJECT_ROOT}/start_quant.sh
 
 # 手动启动
+cd /path/to/comprehensive-quant-workbench
 python3 quant_web/server.py 8600
 # 浏览器打开 http://127.0.0.1:8600
 ```
 
-公网部署时必须设置随机的 `QUANT_WEB_API_KEY`，并由 Nginx 终止 HTTPS；
-不要直接把后端端口暴露到公网。
-
-## 架构
+## 当前架构
 
 ```
 quant_web/
-├── server.py              # 标准库 http.server 后端与 /api 路由
+├── server.py              # HTTP 后端（V12.x，大量 /api 端点）
 ├── stock_analysis.py      # 个股分析/指标聚合
-├── decision_contract.py   # 决策输出契约
-├── handlers/              # 版本化 API、回测控制台、策略实验室
-├── static/                # 前端页面、样式与脚本
+├── AUDIT_FINDINGS.md      # 前端-后端契约审计发现
+├── handlers/              # 部分版本化 API（v11/risk 等）
+├── static/
+│   ├── index.html         # 主页面
+│   ├── app.js             # 前端主逻辑
+│   ├── trader.js          # 交易/持仓页面逻辑
+│   ├── research_dashboard.html
+│   ├── task-dashboard.js
+│   ├── styles.css
+│   └── ...
 └── tests/                 # 前端/API 契约测试
 ```
-
-前端主要页面：
-
-| 页面 | 文件 | 用途 |
-|---|---|---|
-| 总览 | `static/index.html` | 主入口与导航 |
-| 回测台 | `static/backtest_console.html` | 因子/信号回放与执行审计 |
-| 策略实验室 | `static/strategy_lab.html` | 运行公开策略模板 |
-| 盘面 | `static/base_panorama.html` | 市场全景 |
-| 复盘 | `static/review_dashboard.html` | 盘后复盘 |
-| 研究 | `static/research_dashboard.html` | 研究进度与图表 |
-| 知识库 | `static/knowledge_base.html` | 检索界面壳（索引需本地构建） |
 
 ## 主要 API 域
 
 - 市场总览/行情：`/api/market`、`/api/global_quotes`、`/api/indices`、`/api/realtime`
-- K线/个股：`/api/history`、`/api/stock_profile`
+- K线/个股：`/api/history`、`/api/v12/kline`、`/api/stock_profile`、`/api/stock_lens`
 - 因子/IC/ML：`/api/factor_library`、`/api/factor_ic`、`/api/factor_combine`、`/api/ml_signal`
 - 回测/组合/风控：`/api/backtest*`、`/api/portfolio*`、`/api/optimize`、`/api/portfolio_risk`
-- 决策链：`/api/decision_chain`、`/api/v11/battle`、`/api/v11/daily`
-- 策略实验室：`/api/strategy-lab/*`（仅三个公开模板）
+- V11/V12 决策链：`/api/decision_chain`、`/api/v11/battle`、`/api/v11/daily`
 - RAG/知识：`/api/rag_search`
+- 研报工作流：`/api/research_flow`（研报NLP/OCR + 产业链/龙头融合）
 - 系统/报告：`/api/reports`、`/api/data_health`、`/api/tasks_status`、`/api/system/status`
 
-## 策略实验室
+## 数据源
 
-策略以受控源码字符串提交，服务端校验后执行：
+| 数据 | 来源 | 状态 |
+|------|------|------|
+| A股日线 | akshare / 本地 Parquet / 腾讯 | ✅ |
+| A股实时行情 | 新浪/腾讯 | ✅ |
+| 板块/行业 | 东方财富 / THS / 申万 | ✅（有降级链） |
+| 分钟K线 | 东方财富 / 腾讯 | ⚠️ 偶发502 |
+| 港股/美股 | 新浪 | ✅ |
+| 融资融券/北向 | akshare | ✅ |
+| 市场温度/情绪 | 本地融合/云快照 | ✅ |
 
-- 必须定义 `build_targets(panel, params)`；
-- 禁止非白名单导入（如 `import os`）；
-- 禁止 `eval` / `exec`。
+## 审计状态（2026-08-15）
 
-公开版内置 `rsi_reversal`、`low_volatility`、`momentum_12_1` 三个模板，
-见 `handlers/strategy_templates.py`。
-
-## 页面版本注入
-
-页面版本号由服务端注入 `{{VERSION}}`，跟随 `quant_system.__version__`。
+- 已做前端-后端契约复审，修复多 P1 契约断裂（factor_ic/factor_combine/news_sentiment/reports/global_quotes 等）。
+- 已知 P2/设计改造项见 `AUDIT_FINDINGS.md`。
+- 页面版本号由服务端注入 `{{VERSION}}`，跟随 `quant_system.__version__`。
 
 ## 注意
 
-- 系统不连接券商、不自动下单，所有信号需要人工确认。
-- 缺少数据或凭据时，对应数据源应显示为不可用，而不是伪造成功。
+- 当前系统**不自动下单**，所有交易为研究/纸面/模拟。
+- 运行中的 quant_web 被云端同步 Move 时可能卡住；同步脚本已做有界 Move + SKIPPED 处理。
+

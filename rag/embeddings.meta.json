@@ -1,0 +1,6 @@
+{
+  "model": "hashed_char_trigram_v1",
+  "kind": "deterministic_retrieval_fallback",
+  "dimension": 256,
+  "reason": "No module named 'sentence_transformers'"
+}

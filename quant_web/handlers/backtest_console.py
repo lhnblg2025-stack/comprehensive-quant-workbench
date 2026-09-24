@@ -168,6 +168,15 @@ def handler_strategies(query: dict, send_json) -> None:
     send_json({"ok": True, "catalog": catalog(), "signals": signal_catalog(), "strategies": _registry_rows(), "matrix": _matrix_rows(), "ml": _ml_summary()})
 
 
+def handler_selection(query: dict, send_json) -> None:
+    try:
+        from quant_system.public_strategies import list_public_strategies as build_selection
+        top = max(5, min(200, int((query.get("top") or ["50"])[0])))
+        send_json({"ok": True, "data": build_selection()[:top]})
+    except Exception as exc:  # noqa: BLE001
+        send_json({"ok": False, "error": f"{type(exc).__name__}: {str(exc)[:180]}"})
+
+
 def _query_value(query: dict, key: str, default: str = "") -> str:
     item = query.get(key)
     return item[0] if item else default

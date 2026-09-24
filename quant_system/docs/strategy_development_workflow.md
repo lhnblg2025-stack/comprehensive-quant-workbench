@@ -36,7 +36,7 @@
 
 3. **开发信号**
 
-   价格/成交量信号应加入 `quant_system/expanded_signals.py`，每个信号必须：
+   价格/成交量信号应加入 `quant_system/public_strategies.py`，每个信号必须：
    - 只使用当日及更早字段；
    - 通过 `feature_asof` 因果检查；
    - 注册到 `EXPANDED_STRATEGIES`；

@@ -32,7 +32,7 @@ def ocr_with_vision(path: Path) -> tuple[str, bool]:
         import base64, json, urllib.request
         import os
         # 读取 openclaw.json 找该 provider 的 baseUrl/apiKey（示例实现）
-        cfg = json.load(open(os.path.expanduser("~/.openclaw/openclaw.json"), encoding="utf-8"))
+        cfg = json.load(open(os.path.expanduser("${OPENCLAW_CONFIG:-$HOME/.config/openclaw/config.json}"), encoding="utf-8"))
         prov = cfg["models"]["providers"]
         prov_name, _, model_id = _VISION_MODEL.partition("/")
         p = prov.get(prov_name, {})

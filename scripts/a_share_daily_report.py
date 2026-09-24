@@ -95,7 +95,7 @@ STYLE_INDEX_NAMES = {
 ROOT = Path(os.environ.get("QUANT_ROOT", str(Path(__file__).resolve().parent.parent)))
 DATA_DIR = ROOT / "generated" / "a_share_data"
 REPORT_DATA_BASE_LATEST = ROOT / "generated" / "report_data_base" / "latest.json"
-REPORT_DIR = Path(os.environ.get("QUANT_DESKTOP", str(Path.home() / "Desktop")) + "/每日任务/A股量化日报")
+REPORT_DIR = Path(os.environ.get("QUANT_DESKTOP", "${QUANT_DESKTOP:-.}") + "/每日任务/A股量化日报")
 
 # 请求级缓存：同一 akshare 接口+参数在 TTL 内重复调用直接命中缓存，减少网络重复请求。
 # 单栈化(V3)：改走 quant_platform.legacy 薄转发，不再直接依赖 quant_v6。

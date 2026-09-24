@@ -44,8 +44,8 @@ def get_credentials():
     """环境变量优先，否则读取现有 openclaw provider 配置。"""
     key = os.environ.get("TSYJZZZ_PRO_API_KEY") or os.environ.get("TSYJZZZ_PLUS_API_KEY")
     if key:
-        return "https://your-llm-relay.example.com/v1/chat/completions", key
-    with open(os.path.expanduser("~/.openclaw/openclaw.json"), encoding="utf-8") as f:
+        return "https://tsyjzzz.com/v1/chat/completions", key
+    with open(os.path.expanduser("${OPENCLAW_CONFIG:-$HOME/.config/openclaw/config.json}"), encoding="utf-8") as f:
         cfg = json.load(f)
     p = cfg["models"]["providers"][PROVIDER]
     return p["baseUrl"].rstrip("/") + "/chat/completions", p["apiKey"]

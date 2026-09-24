@@ -389,7 +389,7 @@ def build_alert_text(result: dict) -> tuple[str, str]:
         lines.append("")
 
     if len(opps) > 10:
-        lines.append(f"... 还有 {len(opps)-10} 只（http://quant-relay.example.com:8600）")
+        lines.append(f"... 还有 {len(opps)-10} 只（http://192.248.144.249:8600）")
 
     lines.append("")
     lines.append("---")

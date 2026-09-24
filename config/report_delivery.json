@@ -48,8 +48,8 @@
       "enabled": true,
       "channel": "openclaw-weixin",
       "target": "env:WECHAT_TARGET",
-      "accountId": "env:WECHAT_ACCOUNT",
-      "status": "configured_via_environment"
+      "accountId": "22496504a713-im-bot",
+      "status": "configured_from_previous_context"
     },
     "qq": {
       "enabled": true,

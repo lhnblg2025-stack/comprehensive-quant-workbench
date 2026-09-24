@@ -8,14 +8,13 @@ test_golden_snapshot.py — 黄金快照测试（V11 项6）
 """
 from __future__ import annotations
 
-import os
 import re
 from pathlib import Path
 
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-DESKTOP_DAILY = Path(os.environ.get("QUANT_DESKTOP", str(Path.home() / "Desktop"))) / "每日任务" / "A股量化日报"
+DESKTOP_DAILY = Path("${QUANT_DESKTOP:-.}/每日任务/A股量化日报")
 IC_REPORT = ROOT / "generated" / "ic_report" / "FACTOR_IC_REPORT_VECTORIZED.csv"
 
 # ── 黄金快照：2026-08-06 日报关键指标 ──

@@ -7,6 +7,6 @@ env = dict(os.environ)
 env["YOUDAONOTE_API_KEY"] = key
 r = subprocess.run(["python3", "scripts/save_to_youdao.py", "--jsonl",
     "data_warehouse/ima_export/media/extracted_new_0903.jsonl", "--path-key", "extracted",
-    "--prefix", "IMA研报-", "--limit", "50", "--sleep", "0.6"], cwd=".",
+    "--prefix", "IMA研报-", "--limit", "50", "--sleep", "0.6"], cwd="${PROJECT_ROOT}",
     env=env, timeout=1700)
 sys.exit(r.returncode)

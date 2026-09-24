@@ -8,7 +8,7 @@
   "timezone": "Asia/Shanghai",
   "command": [
     "python3",
-    "${QUANT_WORKSPACE:-.}/scripts/generate_portfolio_weekly.py",
+    "${PROJECT_ROOT}/scripts/generate_portfolio_weekly.py",
     "--task",
     "muyuan_weekly"
   ],

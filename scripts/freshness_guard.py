@@ -7,7 +7,7 @@ try:
     day = sys.argv[1]
 except IndexError:
     print('usage: freshness_guard.py YYYY-MM-DD'); raise SystemExit(2)
-root = Path('.')
+root = Path('${PROJECT_ROOT}')
 try:
     expected = pd.Timestamp(day).date()
 except Exception as e:

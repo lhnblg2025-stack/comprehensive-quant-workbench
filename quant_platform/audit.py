@@ -140,7 +140,7 @@ def _data_audit() -> dict[str, Any]:
 
 def _find_report_files() -> list[Path]:
     """定位日报/报告文件（优先日报目录，其次项目文档）。"""
-    desktop = Path(os.environ.get("QUANT_DESKTOP", str(Path.home() / "Desktop")))
+    desktop = Path(os.environ.get("QUANT_DESKTOP", "${QUANT_DESKTOP:-.}"))
     # 日报优先（用户硬规则：每日任务/A股量化日报）
     d1 = desktop / "每日任务" / "A股量化日报"
     if d1.exists():

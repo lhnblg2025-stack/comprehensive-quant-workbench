@@ -157,20 +157,15 @@ def _freshness(symbol: str) -> dict[str, Any] | None:
 
 
 def _is_stale(symbol: str) -> bool:
-    """True if symbol's cache is older than FRESHNESS_HOURS or missing.
-
-    Timestamps are compared in UTC. Stored values may be timezone-aware or
-    naive (legacy rows and tests); naive values are interpreted as local time
-    and normalised, so staleness does not depend on the host timezone.
-    """
+    """True if symbol's cache is older than FRESHNESS_HOURS or missing."""
     info = _freshness(symbol)
     if info is None:
         return True
     try:
         last = datetime.fromisoformat(info["last_fetch"])
-        if last.tzinfo is None:
-            last = last.astimezone()  # naive -> local tz, then normalise below
-        age_h = (datetime.now(timezone.utc) - last.astimezone(timezone.utc)).total_seconds() / 3600
+        if last.tzinfo is not None:
+            last = last.astimezone(CST).replace(tzinfo=None)  # 统一到 naive CST
+        age_h = (datetime.now(CST).replace(tzinfo=None) - last).total_seconds() / 3600
         return age_h > FRESHNESS_HOURS
     except Exception:
         return True

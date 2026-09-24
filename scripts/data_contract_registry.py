@@ -166,7 +166,7 @@ REGISTRY: list[dict] = [
     {
         "id": "cninfo",
         "name": "巨潮公告（官方源）",
-        "provider": "腾讯云 crawler_cninfo.py（quant-cloud.example.com）",
+        "provider": "腾讯云 crawler_cninfo.py（124.223.219.237）",
         "frequency": "每日 18:30 schtasks",
         "threshold_days": 7,
         "consumers": ["alternative_data（高扰动/密集披露）", "announcement_arbitrage"],

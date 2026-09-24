@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 云数据分阶段编排：任何阶段失败都保留真实退出码，不让长串联吞错。
 set -u
-ROOT="${QUANT_WORKSPACE:-.}"
+ROOT="${PROJECT_ROOT}"
 cd "$ROOT"
 mkdir -p generated/logs
 STAMP="$(date +%Y%m%d_%H%M%S)"

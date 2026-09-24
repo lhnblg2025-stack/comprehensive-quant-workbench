@@ -7,7 +7,7 @@
   },
   "command": [
     "python3",
-    "${QUANT_WORKSPACE:-.}/scripts/desktop_audit.py"
+    "${PROJECT_ROOT}/scripts/desktop_audit.py"
   ],
   "timeout_seconds": 1800
 }

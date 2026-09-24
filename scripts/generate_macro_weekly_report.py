@@ -211,7 +211,7 @@ A股周期：资源品受PPI同比、煤炭、有色和油价库存支撑，但�
 - 社融/M2：`get_social_finance_m2()` 返回央行2026-06官方校验快照。
 - 国际原油：`get_international_oil_sources()` 使用OPEC/EIA/FRED官方源登记和桌面归档 `{oil_source}`。
 - Fed/FRED：`get_fed_data_sources()` 和 `get_official_source_registry()` 提供官方源入口和序列ID。
-- 增长总量：桌面归档 `$HOME/Desktop/宏观数据/经济数据/2026-H1_上半年经济数据半年报与解读.md`。
+- 增长总量：桌面归档 `${QUANT_DESKTOP:-.}/宏观数据/经济数据/2026-H1_上半年经济数据半年报与解读.md`。
 
 失败项和处理：
 - 必须调用的7个函数均成功返回，本次未修改 `scripts/data_sources.py` fallback。

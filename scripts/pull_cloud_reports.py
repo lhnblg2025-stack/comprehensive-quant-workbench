@@ -23,7 +23,7 @@ ROOT = Path(__file__).resolve().parents[1]
 # 审计 2026-08-16：基础设施信息允许从环境变量注入；未设置时保留本地兼容默认
 import os as _os
 PEM = _os.environ.get("QUANT_CLOUD_PEM", "/mnt/hgfs/share/openclaw.pem")
-HOST = _os.environ.get("QUANT_CLOUD_HOST_TX", "Administrator@quant-cloud.example.com")
+HOST = _os.environ.get("QUANT_CLOUD_HOST_TX", "Administrator@124.223.219.237")
 REMOTE = "C:/quant/generated"
 LOCAL = ROOT / "generated"
 

@@ -161,7 +161,7 @@ def main() -> int:
     if len(sys.argv) != 2:
         print("usage: artifact_guard.py YYYY-MM-DD", file=sys.stderr)
         return 2
-    html = validate_artifacts(Path(os.environ.get("QUANT_ROOT", ".")), sys.argv[1])
+    html = validate_artifacts(Path(os.environ.get("QUANT_ROOT", "${PROJECT_ROOT}")), sys.argv[1])
     print(f"artifacts ok: {sys.argv[1]} html={html}")
     return 0
 

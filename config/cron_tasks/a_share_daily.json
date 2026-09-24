@@ -4,7 +4,7 @@
   "report_key": "a_share_daily",
   "command": [
     "python3",
-    "${QUANT_WORKSPACE:-.}/scripts/a_share_daily_report.py",
+    "${PROJECT_ROOT}/scripts/a_share_daily_report.py",
     "--out",
     "{out}"
   ],

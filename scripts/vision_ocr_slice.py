@@ -18,7 +18,7 @@ MAX_TOKENS = 8000
 
 
 def get_credentials():
-    cfg = json.load(open(os.path.expanduser("~/.openclaw/openclaw.json")))
+    cfg = json.load(open(os.path.expanduser("${OPENCLAW_CONFIG:-$HOME/.config/openclaw/config.json}")))
     p = cfg["models"]["providers"][PROVIDER]
     return p["baseUrl"].rstrip("/") + "/chat/completions", p["apiKey"]
 

@@ -8,7 +8,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-sys.path.insert(0, './scripts')
+sys.path.insert(0, '${PROJECT_ROOT}/scripts')
 from data_sources import (  # noqa: E402
     fetch_dividend_weekly_inputs,
     fetch_a_share_index_weekly,

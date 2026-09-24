@@ -4,7 +4,7 @@
   "report_key": "muyuan_capacity",
   "command": [
     "python3",
-    "${QUANT_WORKSPACE:-.}/scripts/generate_asset_weekly_report.py",
+    "${PROJECT_ROOT}/scripts/generate_asset_weekly_report.py",
     "--task",
     "muyuan_capacity",
     "--out",

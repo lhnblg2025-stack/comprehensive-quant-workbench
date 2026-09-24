@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 交易日复盘编排 wrapper：保留每一步退出码，避免尾部 echo 覆盖失败。
 set -u
-ROOT="${QUANT_WORKSPACE:-.}"
+ROOT="${PROJECT_ROOT}"
 cd "$ROOT"
 mkdir -p generated/logs
 /usr/bin/env python3 scripts/data_contract_registry.py --check >> generated/logs/data_contract.log 2>&1

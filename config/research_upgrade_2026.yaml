@@ -1,0 +1,51 @@
+schema: research_upgrade.v1
+experiment:
+  id: ashare_factor_upgrade_2026
+  status: frozen_before_holdout
+boundaries:
+  development_end: '2024-12-31'
+  validation_start: '2025-01-01'
+  validation_end: '2025-12-31'
+  holdout_start: '2026-01-01'
+  holdout_end: null
+  embargo_days: 5
+  label_horizon_days: 5
+data:
+  primary_price_panel: generated/long_price_panel/price_panel.parquet
+  required_pit_panel: data_warehouse/research_panels/ashare_tushare_500_10y_v2/annual_pit_research_panel.parquet
+  minimum_symbols: 800
+  minimum_start: '2018-01-01'
+factors:
+  price_volume:
+    - momentum
+    - reversal
+    - volatility
+    - liquidity
+    - trend_quality
+    - breakout
+  new_pit:
+    - value_composite
+    - quality_roe
+    - quality_cashflow
+    - earnings_revision
+    - financial_safety
+    - fund_flow_persistence
+    - event_quality
+  neutralized:
+    - industry_relative_momentum
+    - residual_quality_momentum
+  overlays:
+    - regime_trend_filter
+costs:
+  profiles:
+    - commission_bps: 0.85
+      minimum_commission: 0.10
+      stamp_duty_sell_bps: 50
+    - commission_bps: 1.0
+      minimum_commission: 5.0
+      stamp_duty_sell_bps: 50
+robustness:
+  bootstrap: moving_block
+  blocks: 2000
+  block_length: 10
+  seeds: [42, 43, 44]

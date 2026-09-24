@@ -16,7 +16,7 @@ Added controls (all optional, all information-safe):
     A per-decision-date multiplier in ``[0, 1]`` applied to every target
     weight.  Unused capital stays in cash, so this is a real de-risking lever
     rather than a cosmetic rescaling.  The caller builds it from index
-    volatility and trend state (see ``expanded_signals.build_exposure_series``).
+    volatility and trend state (see ``public_strategies.build_exposure_series``).
 ``drawdown_deleverage``
     ``(entry, multiplier, recovery)``: once the *simulated* equity drawdown
     breaches ``entry`` every later target is scaled by ``multiplier`` until the

@@ -52,7 +52,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-WORKSPACE = Path(__file__).resolve().parent.parent.parent  # .
+WORKSPACE = Path(__file__).resolve().parent.parent.parent  # ${PROJECT_ROOT}
 REPO_ROOT = Path(__file__).resolve().parent.parent          # quant_system 仓库根
 sys.path.insert(0, str(WORKSPACE))
 from quant_system.analysis_core.common import num  # noqa: E402

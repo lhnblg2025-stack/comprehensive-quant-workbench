@@ -4,7 +4,7 @@
   "report_key": "cpi_ppi",
   "command": [
     "python3",
-    "${QUANT_WORKSPACE:-.}/scripts/generate_cpi_ppi_report.py",
+    "${PROJECT_ROOT}/scripts/generate_cpi_ppi_report.py",
     "--out",
     "{out}"
   ],

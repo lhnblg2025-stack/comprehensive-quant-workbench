@@ -1,7 +1,3 @@
-# Runtime/test lock for the workbench. Install with:
-#   pip install -r requirements.lock.txt
-# These are the packages that install cleanly on GitHub-hosted runners and are
-# sufficient for `make ci` plus the data-independent part of the test suite.
 akshare==1.18.64
 beautifulsoup4==4.15.0
 jsonpath==0.82.2
@@ -16,18 +12,7 @@ pyarrow==25.0.0
 pytest==9.1.1
 python-dateutil==2.9.0.post0
 pytz==2026.3.post1
-PyYAML==6.0.2
 requests==2.34.2
 scikit-learn==1.7.2
 scipy==1.15.3
 tqdm==4.68.4
-# Optional integration adapter. Pure Python, installs cleanly.
-backtrader==1.9.78.123
-
-# --- optional extras that are NOT installed by default ---
-# Riskfolio-Lib compiles native extensions and is slow/fragile on CI runners.
-# Its adapter degrades gracefully when absent and the matching tests skip.
-# Install locally when you need HRP / mean-variance optimisers:
-#   pip install "Riskfolio-Lib==7.0.1"
-# Likewise alphalens-reloaded is optional:
-#   pip install alphalens-reloaded

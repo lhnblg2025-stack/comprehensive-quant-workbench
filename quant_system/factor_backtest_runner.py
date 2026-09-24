@@ -40,6 +40,8 @@ def _validate_parameters(quantile, cost_bps, min_stocks, oos_ratio=None, annuali
     if min_stocks < 2: raise ValueError("min_stocks must be at least 2")
     if oos_ratio is not None and not 0 < oos_ratio < 1: raise ValueError("oos_ratio must be between 0 and 1")
     if annualization <= 0: raise ValueError("annualization must be positive")
+    if oos_ratio is not None and abs(oos_ratio - DEFAULT_PROTOCOL.test_ratio) > 1e-9:
+        raise ValueError("research_protocol_requires_5_3_train_test_split")
 
 
 def _read_snapshots(data_dir: Path) -> pd.DataFrame:

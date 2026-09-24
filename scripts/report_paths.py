@@ -19,7 +19,7 @@ import re
 # 支持环境变量覆盖（云端部署时 QUANT_DESKTOP=/root/quant_desktop 等，本机默认桌面）
 # strip()：run_task.bat 的 `set QUANT_DESKTOP=C:\quant\out ` 行尾空格会进入环境变量值，
 # 若不清理，Path("C:\quant\out ") 拼接子目录会产生 "out \宏观数据" 的错误路径。
-DESKTOP = Path(os.environ.get("QUANT_DESKTOP", str(Path.home() / "Desktop")).strip())
+DESKTOP = Path(os.environ.get("QUANT_DESKTOP", "${QUANT_DESKTOP:-.}").strip())
 
 
 # ── Full Folder Taxonomy ──────────────────────────────────────────────────

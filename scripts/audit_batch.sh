@@ -1,7 +1,7 @@
 #!/bin/bash
 # audit_batch.sh — 批量派发 codex+deepseek 逐行审计
 # W2.5 安全: DEEPSEEK_API_KEY 不再硬编码（原 sk-* 已入 git 历史，需轮换），运行前从环境注入
-cd ${QUANT_WORKSPACE:-.}
+cd ${PROJECT_ROOT}
 mkdir -p /tmp/audit
 
 PROMPT_TEMPLATE='逐行审计以下文件，找出真实bug。要求：1)逐行阅读，重点找 逻辑错误/前视偏差/数据对齐/索引错位/除零/异常吞噬/硬编码日期/边界条件/并发写文件/结果可疑(有输出但错误)；2)输出格式：文件:行号|级别(Critical/Major/Minor)|问题描述|修复建议；3)只报真实问题并给证据，不要泛泛建议；4)中文回答；5)开头列出每个文件的函数清单便于核对。文件列表：'

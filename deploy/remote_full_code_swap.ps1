@@ -1,4 +1,4 @@
-param([string]$QuantRoot='C:\quant',[string]$Archive="$env:TEMP\full-code-swap.tgz")
+param([string]$QuantRoot='C:\quant',[string]$Archive='C:\Users\Administrator\AppData\Local\Temp\tencent-full-code-v0.1.tgz')
 $ErrorActionPreference='Stop'
 $stamp=Get-Date -Format 'yyyyMMddHHmmss'
 $backup=Join-Path $QuantRoot "backup\full-code-$stamp"

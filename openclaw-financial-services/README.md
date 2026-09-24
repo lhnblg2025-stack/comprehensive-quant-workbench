@@ -28,11 +28,11 @@ Plus **12 MCP data source connectors** for institutional-grade financial data.
 git clone https://github.com/d-wwei/openclaw-financial-services.git
 
 # 2. Copy skills to OpenClaw
-cp -r openclaw-financial-services/skills/ ~/.openclaw/skills/
+cp -r openclaw-financial-services/skills/ ${OPENCLAW_SKILLS_DIR:-$HOME/.local/share/openclaw/skills}/
 
 # 3. Merge MCP config into your openclaw.json
 # Open openclaw.json and merge the "skills" and "mcp" sections
-# into your existing ~/.openclaw/openclaw.json
+# into your existing ${OPENCLAW_CONFIG:-$HOME/.config/openclaw/config.json}
 
 # 4. Restart OpenClaw Gateway
 ```

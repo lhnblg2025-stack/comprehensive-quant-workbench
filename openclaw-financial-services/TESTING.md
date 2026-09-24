@@ -2,7 +2,7 @@
 
 8 个测试任务，覆盖所有模块，从简单到复杂。安装 skills 后在 OpenClaw 中直接使用以下 prompt 进行测试。
 
-> **前置条件**：确保 skills 已复制到 `~/.openclaw/skills/` 并重启了 Gateway。
+> **前置条件**：确保 skills 已复制到 `${OPENCLAW_SKILLS_DIR:-$HOME/.local/share/openclaw/skills}/` 并重启了 Gateway。
 
 ---
 

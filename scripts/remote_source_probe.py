@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """remote_source_probe.py — 腾讯云远程数据源探测（pytdx/问财/巨潮 国内 IP）
 
-本机(境外/虚拟机)连不上通达信/巨潮/问财 → 在腾讯云(quant-cloud.example.com, 国内 IP)上探测。
+本机(境外/虚拟机)连不上通达信/巨潮/问财 → 在腾讯云(124.223.219.237, 国内 IP)上探测。
 由 push_to_server.py 推送到远程后执行:
   python C:\\quant\\scripts\\remote_source_probe.py
 """

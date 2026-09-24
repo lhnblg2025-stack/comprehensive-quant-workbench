@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -u
-ROOT="${QUANT_WORKSPACE:-.}"
+ROOT="${PROJECT_ROOT}"
 cd "$ROOT"
 mkdir -p generated/logs
 LOG="generated/logs/multi_system_review_$(date +%Y%m%d).log"

@@ -5,14 +5,14 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-WorkingDirectory=%h/.openclaw/workspace
-Environment=QUANT_ROOT=%h/.openclaw/workspace
-Environment=QUANT_PYTHON=%h/anaconda3/bin/python3
+WorkingDirectory=%h/quant-workbench
+Environment=QUANT_ROOT=%h/quant-workbench
+Environment=QUANT_PYTHON=/usr/bin/python3
 Environment=QUANT_WEB_BIND_HOST=127.0.0.1
 Environment=QUANT_WEB_PORT=8600
 Environment=QUANT_WEB_ALLOW_UNAUTH=1
 Environment=PYTHONUNBUFFERED=1
-ExecStart=%h/anaconda3/bin/python3 -u %h/.openclaw/workspace/quant_web/server.py 8600
+ExecStart=/usr/bin/python3 -u %h/quant-workbench/quant_web/server.py 8600
 Restart=on-failure
 RestartSec=5
 KillSignal=SIGTERM

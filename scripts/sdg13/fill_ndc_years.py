@@ -21,7 +21,7 @@ import pandas as pd
 import requests
 
 # ── Config ─────────────────────────────────────────────────────────────────
-PROBE_CSV = Path("./sdg13_ndc_probe_results_final.csv")
+PROBE_CSV = Path("${PROJECT_ROOT}/sdg13_ndc_probe_results_final.csv")
 OUTPUT_DIR = Path("/mnt/hgfs/share/SDG")
 CW_JSON = Path("/tmp/cw_ndcs.json")
 

@@ -301,7 +301,7 @@ async function fetchLogo(companyName, outputDir) {
 ```
 
 **Logo guidelines:**
-- Save all logos to `./logos/[company-name].png`
+- Save all logos to `/home/claude/logos/[company-name].png`
 - All logos are 128×128 PNG with transparent backgrounds
 - On the slide, display logos at 0.35"–0.5" tall — they're accents, not focal points
 - Initial-fallback circles use gray (`BDBDBD`) fill with white text — consistent with the monochrome palette
@@ -461,7 +461,7 @@ const SLIDE_W = 13.33; // 16:9 slide width in inches
 //    - Center the table: x = (SLIDE_W - tableWidth) / 2
 // 5. Footer
 
-pres.writeFile({ fileName: "./deal-flow-digest.pptx" });
+pres.writeFile({ fileName: "/home/claude/deal-flow-digest.pptx" });
 ```
 
 Use factory functions (not shared objects) for shadows and repeated styles per the pptxgenjs pitfalls guidance.

@@ -4,7 +4,7 @@
   "report_key": "oil_monthly",
   "command": [
     "python3",
-    "${QUANT_WORKSPACE:-.}/scripts/generate_requested_reports.py",
+    "${PROJECT_ROOT}/scripts/generate_requested_reports.py",
     "--only",
     "oil"
   ],

@@ -606,7 +606,7 @@ def fetch_youdao_reports(max_notes: int = 20, timeout: int = 8) -> list[dict[str
     try:
         import json as _json
         import os as _os
-        cfg_path = _os.path.expanduser("~/.openclaw/openclaw.json")
+        cfg_path = _os.path.expanduser("${OPENCLAW_CONFIG:-$HOME/.config/openclaw/config.json}")
         if not _os.path.exists(cfg_path):
             return []
         cfg = _json.load(open(cfg_path, encoding="utf-8"))

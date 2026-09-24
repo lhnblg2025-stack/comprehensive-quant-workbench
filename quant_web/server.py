@@ -477,6 +477,9 @@ class QuantHandler(SimpleHTTPRequestHandler):
         if parsed.path == "/api/btc/task":
             backtest_console_handlers.handler_task(parse_qs(parsed.query), self._send_json)
             return
+        if parsed.path == "/api/btc/selection":
+            backtest_console_handlers.handler_selection(parse_qs(parsed.query), self._send_json)
+            return
         if parsed.path == "/api/strategy-lab/admission":
             from quant_web.handlers import strategy_lab
             strategy_lab.handler_admission(parse_qs(parsed.query), self._send_json)
@@ -4867,14 +4870,8 @@ class QuantHandler(SimpleHTTPRequestHandler):
     def _handle_v4_factor_attribution(self) -> None:
         """GET /api/v4/performance/factor_attribution"""
         try:
-            from quant_system.trade_db import get_positions
-            try:
-                positions = get_positions()
-            except Exception:
-                # A fresh install has no trade ledger yet. "No positions" must
-                # still return the documented placeholder payload instead of a
-                # 500, so the UI can render an empty attribution.
-                positions = []
+            from quant_system.trade_db import get_trades, get_positions
+            positions = get_positions()
             # Estimate factor attribution from current holdings
             n = len(positions)
             self._send_json({
@@ -5265,7 +5262,7 @@ class QuantHandler(SimpleHTTPRequestHandler):
         # 首选: 直读 OpenClaw 状态库（避免 CLI 子进程超时后把真实任务显示成 0/0）。
         try:
             import sqlite3 as _sq
-            state_db = Path.home() / ".openclaw" / "state" / "openclaw.sqlite"
+            state_db = Path(os.environ.get("QUANT_STATE_DB", "quant_state.sqlite"))
             con = _sq.connect(f"file:{state_db}?mode=ro", uri=True, timeout=5)
             try:
                 query = (
@@ -6463,7 +6460,7 @@ def _get_system_status() -> dict:
     cron_error = None
     jobs = []
     try:
-        state_db = Path.home() / ".openclaw" / "state" / "openclaw.sqlite"
+        state_db = Path(os.environ.get("QUANT_STATE_DB", "quant_state.sqlite"))
         with sqlite3.connect(f"file:{state_db}?mode=ro", uri=True, timeout=5) as con:
             for row in con.execute(
                 "SELECT COALESCE(display_name,name), enabled, schedule_kind, schedule_expr, every_ms, "

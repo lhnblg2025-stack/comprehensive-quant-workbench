@@ -13,7 +13,6 @@ from __future__ import annotations
 import argparse
 import json
 import logging
-import os
 import subprocess
 import sys
 from pathlib import Path
@@ -24,9 +23,9 @@ sys.path.insert(0, str(ROOT / "scripts"))
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 logger = logging.getLogger("push_review")
 
-# 渠道配置：通过环境变量注入，仓库中不保存任何真实账号或接收方标识。
-WECHAT_ACCOUNT = os.environ.get("WECHAT_ACCOUNT", "")
-WECHAT_TARGET = os.environ.get("WECHAT_TARGET", "")
+# 渠道配置（可被环境变量覆盖）
+WECHAT_ACCOUNT = "22496504a713-im-bot"
+WECHAT_TARGET = "o9cq801XyUUGxJLNp2tP0U0UL-oI@im.wechat"
 
 
 def _load_review_md(date: str | None) -> str:

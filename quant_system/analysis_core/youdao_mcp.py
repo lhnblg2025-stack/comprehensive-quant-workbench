@@ -279,6 +279,6 @@ def _extract_note_text(res: Any) -> str:
 if __name__ == "__main__":
     import json as _json
     import os as _os
-    cfg = _json.loads(_os.popen("python3 -c \"import json,os;print(json.dumps(json.load(open(os.path.expanduser('~/.openclaw/openclaw.json')))['mcp']['servers']['youdao-ynote']))\"").read())
+    cfg = _json.loads(_os.popen("python3 -c \"import json,os;print(json.dumps(json.load(open(os.path.expanduser('${OPENCLAW_CONFIG:-$HOME/.config/openclaw/config.json}')))['mcp']['servers']['youdao-ynote']))\"").read())
     with YoudaoMCPClient(cfg["url"], headers=cfg.get("headers", {})) as client:
         print("tools:", [t.get("name") for t in client.list_tools()])

@@ -10,15 +10,14 @@ from __future__ import annotations
 import argparse
 import html
 import json
-import os
 import re
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_SOURCE = Path(os.environ.get("QUANT_DESKTOP", str(Path.home() / "Desktop"))) / "研报共享" / "A股融合研报_2026-08-21.html"
-DEFAULT_OUT = Path(os.environ.get("QUANT_DESKTOP", str(Path.home() / "Desktop"))) / "研报共享" / "A股短线盘面复盘_审计版_2026-08-25.html"
+DEFAULT_SOURCE = Path('${QUANT_DESKTOP:-.}/研报共享/A股融合研报_2026-08-21.html')
+DEFAULT_OUT = Path('${QUANT_DESKTOP:-.}/研报共享/A股短线盘面复盘_审计版_2026-08-25.html')
 
 
 def esc(v: Any) -> str:

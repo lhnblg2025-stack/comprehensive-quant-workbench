@@ -39,7 +39,7 @@ CLEAN_DIR = OUTPUT_DIR  # CSVs go directly in the sdg folder
 
 # NDC probe sources (try in order)
 NDC_CANDIDATES = [
-    Path("./sdg13_ndc_probe_results_final.csv"),
+    Path("${PROJECT_ROOT}/sdg13_ndc_probe_results_final.csv"),
     Path("/mnt/hgfs/share/SDG/最终合并_SDG13_SDG16_SDG17_20260726/01_核心总表与联合数据/SDG13_NDC逐国0_1_带置信度来源.csv"),
 ]
 
