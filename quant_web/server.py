@@ -4867,8 +4867,14 @@ class QuantHandler(SimpleHTTPRequestHandler):
     def _handle_v4_factor_attribution(self) -> None:
         """GET /api/v4/performance/factor_attribution"""
         try:
-            from quant_system.trade_db import get_trades, get_positions
-            positions = get_positions()
+            from quant_system.trade_db import get_positions
+            try:
+                positions = get_positions()
+            except Exception:
+                # A fresh install has no trade ledger yet. "No positions" must
+                # still return the documented placeholder payload instead of a
+                # 500, so the UI can render an empty attribution.
+                positions = []
             # Estimate factor attribution from current holdings
             n = len(positions)
             self._send_json({
