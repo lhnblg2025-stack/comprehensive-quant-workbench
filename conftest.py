@@ -6,6 +6,7 @@ instead of failing, so a clean clone reports a truthful green/partial result.
 
 Add an entry here whenever a test depends on an asset that is not in the repo.
 """
+import importlib.util
 from pathlib import Path
 
 import pytest
@@ -48,10 +49,23 @@ ASSET_TESTS = {
     "scripts/tests/test_freshness_audit_p22.py": WAREHOUSE / "data_freshness.json",
     # Specific asset-dependent tests.
     "tests/test_v11_audit_regressions.py::TestRegimeStale": WAREHOUSE,
+    "tests/test_after_close_extra.py::TestPushReport::test_build_push_text_has_all_sections": GENERATED
+    / "decision_snapshot_after_close_2026-08-26.json",
     "quant_web/tests/test_strategy_lab.py::test_stock_universe_is_mainboard_only_and_excludes_st": WAREHOUSE,
     "quant_web/tests/test_strategy_lab.py::test_stock_research_gate_preserves_fixed_mainboard_sample_and_discloses_blocker": WAREHOUSE,
     "quant_web/tests/test_strategy_lab.py::test_etf_universe_and_benchmarks_are_distinct": WAREHOUSE / "events/etf_history.parquet",
 }
+
+# nodeid prefix -> (required top-level module, install hint).
+# These adapters are optional extras (see requirements.lock.txt); the tests are
+# skipped when the dependency is missing instead of reported as broken.
+OPTIONAL_DEPENDENCY_TESTS = (
+    ("quant_system/tests/test_backtrader_adapter.py", "backtrader", "backtrader"),
+    ("quant_system/tests/test_backtrader_execution_events.py", "backtrader", "backtrader"),
+    ("quant_system/tests/test_backtest_crosscheck.py::test_bounded_crosscheck", "backtrader", "backtrader"),
+    ("quant_system/tests/test_integrations.py::TestAlphalensAdapter", "alphalens", "alphalens-reloaded"),
+    ("quant_system/tests/test_integrations.py::TestRiskfolioAdapter", "riskfolio", "Riskfolio-Lib"),
+)
 
 
 def pytest_collection_modifyitems(config, items):
@@ -62,3 +76,14 @@ def pytest_collection_modifyitems(config, items):
                     pytest.mark.skip(reason=f"runtime asset missing: {asset.relative_to(ROOT)}")
                 )
                 break
+
+    # Optional third-party adapters: the code degrades gracefully when the
+    # package is absent, so the matching tests skip rather than error.
+    for prefix, module, hint in OPTIONAL_DEPENDENCY_TESTS:
+        if importlib.util.find_spec(module) is not None:
+            continue
+        for item in items:
+            if item.nodeid.startswith(prefix):
+                item.add_marker(
+                    pytest.mark.skip(reason=f"optional dependency not installed: {hint}")
+                )

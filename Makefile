@@ -1,17 +1,20 @@
 PYTHON ?= python3
 PYTEST := $(PYTHON) -m pytest -q -p no:cacheprovider
-SUITES := tests quant_system/tests scripts/tests quant_web/tests
 
 .PHONY: lint-config fast api-contract contract integration slow ci help
+
+# The lock file is the single source of truth for pinned runtime versions.
+requirements.lock.txt:
+	@true
 
 help:
 	@echo "lint-config    compile every Python package (syntax/import sanity)"
 	@echo "fast           small public + release-safety contract set"
-	@echo "api-contract   FastAPI/http contract tests"
-	@echo "ci             what CI runs: lint-config + fast + api-contract"
-	@echo "contract       full non-integration suite (needs runtime data for some tests)"
+	@echo "api-contract   HTTP/API contract tests"
+	@echo "contract       full non-integration suite"
 	@echo "integration    tests marked 'integration'"
 	@echo "slow           full suite including integration"
+	@echo "ci             lint-config + fast + contract"
 
 lint-config:
 	$(PYTHON) -m compileall -q quant_system quant_platform quant_web scripts tests research
@@ -22,19 +25,19 @@ fast:
 api-contract:
 	$(PYTEST) quant_system/tests/test_api_contract.py
 
-# Full non-integration suite. Some tests need the runtime data warehouse and
-# generated artefacts; conftest.py skips them with an explicit reason when those
-# assets are absent, so this target is safe to run on a clean clone.
+# Full non-integration suite. Tests that need the runtime data warehouse,
+# generated artefacts or optional adapters are skipped by conftest.py with an
+# explicit reason, so this target is safe on a clean checkout.
 contract:
-	$(PYTEST) $(SUITES) -m 'not integration'
+	$(PYTEST) tests quant_system/tests scripts/tests quant_web/tests -m 'not integration'
 
 run_integration:
-	$(PYTEST) $(SUITES) -m integration
+	$(PYTEST) tests quant_system/tests scripts/tests quant_web/tests -m integration
 
 integration: run_integration
 	@$(MAKE) run_integration
 
 slow:
-	$(PYTEST) $(SUITES)
+	$(PYTEST) tests quant_system/tests quant_web/tests scripts/tests
 
-ci: lint-config fast api-contract
+ci: lint-config fast contract

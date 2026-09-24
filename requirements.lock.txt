@@ -1,3 +1,8 @@
+# Runtime/test lock for the workbench. Install with:
+#   pip install -r requirements.lock.txt
+# Optional extras used by some integration adapters are listed at the bottom and
+# are optional at runtime: the adapters degrade gracefully when they are absent,
+# and the matching tests skip instead of failing.
 akshare==1.18.64
 beautifulsoup4==4.15.0
 jsonpath==0.82.2
@@ -12,7 +17,14 @@ pyarrow==25.0.0
 pytest==9.1.1
 python-dateutil==2.9.0.post0
 pytz==2026.3.post1
+PyYAML==5.4.1
 requests==2.34.2
 scikit-learn==1.7.2
 scipy==1.15.3
 tqdm==4.68.4
+
+# --- optional integration extras ---
+# backtrader: order-level execution replay and cross-checks
+backtrader==1.9.78.123
+# Riskfolio-Lib: HRP / mean-variance portfolio optimisers
+Riskfolio-Lib==7.0.1
