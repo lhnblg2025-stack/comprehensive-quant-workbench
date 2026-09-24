@@ -265,8 +265,14 @@ make lint-config # 编译检查
 make ci          # lint-config + fast + contract
 ```
 
-当前基线：**1893 项测试可收集，1887 通过、2 跳过**（4 项原先失败的协议/对齐测试已修复）。
-需要运行资产（Parquet 数据仓库、生成产物）的测试由 `conftest.py` 自动跳过。
+当前基线（干净克隆，无运行数据）：
+
+- **1832 项测试可收集；1762 通过、70 跳过、0 失败**
+- 在有完整 `data_warehouse/` 与 `generated/` 的机器上：1830 通过、2 跳过、0 失败
+
+需要运行资产（Parquet 数据仓库、生成产物）的测试由 `conftest.py` 自动跳过，
+并给出 `runtime asset missing: <path>` 的明确原因，而不是让构建变红。
+新增依赖运行资产的测试时，请在 `conftest.py` 的 `ASSET_TESTS` 中登记对应路径。
 
 发布前做一次脱密扫描：
 
