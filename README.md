@@ -4,6 +4,8 @@
 >
 > Python research engines · audited backtests · browser workbench · RAG adapters · deployment templates
 
+[🇨🇳 简体中文](README.zh-CN.md) · [English](README.md) · [产品与合规说明](FULL_PUBLIC_RELEASE_README.md)
+
 [![CI](https://github.com/lhnblg2025-stack/comprehensive-quant-workbench/actions/workflows/ci.yml/badge.svg)](https://github.com/lhnblg2025-stack/comprehensive-quant-workbench/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-review--before--use-lightgrey.svg)](LICENSE)
 [![Release](https://img.shields.io/badge/release-declassified%20public-2f855a.svg)](DECLASSIFICATION_NOTICE_FULL.md)
