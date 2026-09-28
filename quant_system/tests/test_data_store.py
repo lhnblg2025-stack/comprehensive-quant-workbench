@@ -14,7 +14,7 @@ from __future__ import annotations
 import sqlite3
 import tempfile
 import unittest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest import mock
 
@@ -22,6 +22,7 @@ import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent.parent
+CST = timezone(timedelta(hours=8))
 
 
 def _import():
@@ -77,7 +78,7 @@ class _TempDbMixin:
             p.stop()
 
     def _insert_freshness(self, symbol, age_hours, row_count=100):
-        ts = (datetime.now() - timedelta(hours=age_hours)).isoformat()
+        ts = (datetime.now(CST) - timedelta(hours=age_hours)).isoformat()
         self._conn.execute(
             "INSERT OR REPLACE INTO data_freshness "
             "(symbol, last_fetch, row_count, last_date, source, quality_score) "

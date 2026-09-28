@@ -7,6 +7,15 @@ on:
     - cron: '0 2 * * *'
 env:
   PYTHON_VERSION: "3.10"
+  # Keep BLAS/OpenMP-backed tests deterministic and avoid native thread
+  # oversubscription on shared GitHub-hosted runners.
+  OMP_NUM_THREADS: "1"
+  OPENBLAS_NUM_THREADS: "1"
+  MKL_NUM_THREADS: "1"
+  NUMEXPR_NUM_THREADS: "1"
+  BLIS_NUM_THREADS: "1"
+  VECLIB_MAXIMUM_THREADS: "1"
+  PYTHONHASHSEED: "0"
 jobs:
   fast-contract:
     runs-on: ubuntu-latest
