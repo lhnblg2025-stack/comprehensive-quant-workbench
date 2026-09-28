@@ -8,7 +8,7 @@ lint-config:
 fast:
 	$(PYTHON) -m pytest -q tests/test_public.py tests/test_extended.py tests/test_cloud_release_safety.py tests/test_recovery_data_base.py
 api-contract:
-	$(PYTHON) -m pytest -q tests/test_api_contract.py quant_system/tests/test_api_contract.py
+	$(PYTHON) -m pytest -q quant_system/tests/test_api_contract.py
 contract:
 	$(PYTHON) -m pytest -q tests quant_system/tests scripts/tests quant_web/tests -m 'not integration'
 run_integration:

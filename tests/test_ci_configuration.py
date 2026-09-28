@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -25,8 +26,18 @@ def test_makefile_covers_root_and_independent_core_repo():
     text = MAKEFILE.read_text(encoding="utf-8")
     assert "requirements.lock.txt" in text
     assert "tests quant_system/tests scripts/tests" in text
-    assert "tests/test_api_contract.py" in text
     assert "quant_system/tests/test_api_contract.py" in text
     assert "ci: lint-config fast contract" in text
     assert "integration:" in text
     assert "slow:" in text
+
+
+def test_makefile_named_tests_exist():
+    text = MAKEFILE.read_text(encoding="utf-8")
+    for target in ("fast", "api-contract"):
+        recipe = re.search(rf"^{re.escape(target)}:\n\t([^\n]+)", text, re.MULTILINE)
+        assert recipe is not None
+        paths = re.findall(r"(?:^|\s)([\w/-]+/test_[\w]+\.py)(?=\s|$)", recipe.group(1))
+        assert paths, f"{target} must run at least one named test"
+        for path in paths:
+            assert (ROOT / path).is_file(), f"{target} refers to missing test: {path}"

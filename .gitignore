@@ -6,8 +6,9 @@
 *.key
 token
 secrets/
-data/
-backtest_output/
+# Only ignore top-level runtime data; nested data/ can contain Python packages.
+/data/
+/backtest_output/
 __pycache__/
 *.py[cod]
 .venv/
